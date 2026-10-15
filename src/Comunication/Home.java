@@ -3,7 +3,9 @@ package Comunication;
 import Interfaces.IEmailEventListener;
 import Interfaces.ITokenCasoUsoEventListener;
 import Services.*;
+import Utils.CommandException;
 import Utils.Email;
+import Utils.ErrorCode;
 import Utils.Interpreter;
 import Utils.Token;
 import proyectomailgrupo12sc.Principal;
@@ -87,7 +89,7 @@ public class Home {
                             enviarTabla(email, respuesta, "Usuario modificado exitosamente", HtmlBuilder.HEADERS_USER, listMod);
                             break;
                         case Token.ELIMINAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: usuario eliminar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del usuario a eliminar. Uso: usuario eliminar id", "usuario eliminar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             usuarioService.eliminarUsuario(id);
                             auditoriaService.registrarAuditoria(1, "usuario", "DELETE", "Usuario eliminado ID: " + id);
@@ -95,11 +97,11 @@ public class Home {
                             enviarTabla(email, respuesta, "Usuario eliminado exitosamente", HtmlBuilder.HEADERS_USER, listDel);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: usuario consultar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del usuario a consultar. Uso: usuario consultar id", "usuario consultar 1");
                             int idCons = Integer.parseInt(event.getParams().get(0).trim());
                             String[] usuarioData = usuarioService.consultarUsuario(idCons);
                             if (usuarioData == null) {
-                                enviarErrorDetallado(email, respuesta, "Usuario No Encontrado", "No existe usuario con ID " + idCons, "usuario listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Usuario No Encontrado", "No existe usuario con ID " + idCons, "usuario listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Usuario #" + idCons, HtmlBuilder.HEADERS_USER, Collections.singletonList(usuarioData));
                             }
@@ -108,11 +110,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, usuarioService.getComandosUsuario());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Usuario", "La acción no es reconocida.", usuarioService.getComandosUsuario());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'usuario'.", usuarioService.getComandosUsuario());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'usuario'.", usuarioService.getComandosUsuario());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Usuario", parseErrorMessage(e), usuarioService.getComandosUsuario());
+                    manejarExcepcionComando(email, respuesta, e, usuarioService.getComandosUsuario());
                 }
             }
 
@@ -137,11 +142,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, rolService.getComandosRol());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Rol", "Acción no reconocida.", rolService.getComandosRol());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'rol'.", rolService.getComandosRol());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'rol'.", rolService.getComandosRol());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Rol", parseErrorMessage(e), rolService.getComandosRol());
+                    manejarExcepcionComando(email, respuesta, e, rolService.getComandosRol());
                 }
             }
 
@@ -166,11 +174,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, categoriaService.getComandosCategoria());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Categoría", "Acción no reconocida.", categoriaService.getComandosCategoria());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'categoria'.", categoriaService.getComandosCategoria());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'categoria'.", categoriaService.getComandosCategoria());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Categoría", parseErrorMessage(e), categoriaService.getComandosCategoria());
+                    manejarExcepcionComando(email, respuesta, e, categoriaService.getComandosCategoria());
                 }
             }
 
@@ -195,7 +206,7 @@ public class Home {
                             enviarTabla(email, respuesta, "Programa actualizado exitosamente", HtmlBuilder.HEADERS_PROGRAMA, listMod);
                             break;
                         case Token.ELIMINAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: programa eliminar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del programa a eliminar. Uso: programa eliminar id", "programa eliminar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             programaService.eliminarPrograma(id);
                             auditoriaService.registrarAuditoria(1, "programa", "DELETE", "Programa eliminado ID: " + id);
@@ -203,11 +214,11 @@ public class Home {
                             enviarTabla(email, respuesta, "Programa eliminado", HtmlBuilder.HEADERS_PROGRAMA, listDel);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: programa consultar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del programa a consultar. Uso: programa consultar id", "programa consultar 1");
                             int idCons = Integer.parseInt(event.getParams().get(0).trim());
                             String[] prog = programaService.consultarPrograma(idCons);
                             if (prog == null) {
-                                enviarErrorDetallado(email, respuesta, "Programa No Encontrado", "No existe programa con ID " + idCons, "programa listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Programa No Encontrado", "No existe programa con ID " + idCons, "programa listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Programa #" + idCons, HtmlBuilder.HEADERS_PROGRAMA, Collections.singletonList(prog));
                             }
@@ -216,11 +227,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, programaService.getComandosPrograma());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Programa", "Acción no reconocida.", programaService.getComandosPrograma());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'programa'.", programaService.getComandosPrograma());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'programa'.", programaService.getComandosPrograma());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Programa", parseErrorMessage(e), programaService.getComandosPrograma());
+                    manejarExcepcionComando(email, respuesta, e, programaService.getComandosPrograma());
                 }
             }
 
@@ -249,18 +263,18 @@ public class Home {
                             enviarTabla(email, respuesta, "Estado de Parrilla actualizado", HtmlBuilder.HEADERS_PARRILLA, listEst);
                             break;
                         case Token.ELIMINAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: parrilla eliminar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID de la parrilla a eliminar. Uso: parrilla eliminar id", "parrilla eliminar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             parrillaService.eliminarParrilla(id);
                             List<String[]> listDel = parrillaService.listarParrillas();
                             enviarTabla(email, respuesta, "Parrilla eliminada", HtmlBuilder.HEADERS_PARRILLA, listDel);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: parrilla consultar id_parrilla");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID de la parrilla a consultar. Uso: parrilla consultar id_parrilla", "parrilla consultar 1");
                             int idParr = Integer.parseInt(event.getParams().get(0).trim());
                             String[] parr = parrillaService.consultarParrilla(idParr);
                             if (parr == null) {
-                                enviarErrorDetallado(email, respuesta, "Parrilla No Encontrada", "ID " + idParr, "parrilla listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Parrilla No Encontrada", "No existe parrilla con ID " + idParr, "parrilla listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Parrilla #" + idParr, HtmlBuilder.HEADERS_PARRILLA, Collections.singletonList(parr));
                             }
@@ -270,7 +284,7 @@ public class Home {
                             if (alAireP != null) {
                                 enviarTabla(email, respuesta, "Programa Actualmente al Aire (Playout)", HtmlBuilder.HEADERS_ITEM_PARRILLA, Collections.singletonList(alAireP));
                             } else {
-                                enviarErrorDetallado(email, respuesta, "Sin Emisión Activa", "No hay bloques de programación activos.", "parrilla listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Sin Emisión Activa", "No hay bloques de programación activos en este momento.", "parrilla hoy");
                             }
                             break;
                         case Token.HOY:
@@ -281,11 +295,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, parrillaService.getComandosParrilla());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Parrilla", "Acción no reconocida.", parrillaService.getComandosParrilla());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'parrilla'.", parrillaService.getComandosParrilla());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'parrilla'.", parrillaService.getComandosParrilla());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Parrilla", parseErrorMessage(e), parrillaService.getComandosParrilla());
+                    manejarExcepcionComando(email, respuesta, e, parrillaService.getComandosParrilla());
                 }
             }
 
@@ -317,17 +334,17 @@ public class Home {
                             enviarExito(email, respuesta, "Bloque de Parrilla Modificado", "Horarios y estado actualizados correctamente.");
                             break;
                         case Token.ELIMINAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: item_parrilla eliminar id_item");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del bloque a eliminar. Uso: item_parrilla eliminar id_item", "item_parrilla eliminar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             itemParrillaService.eliminarItemParrilla(id);
                             enviarExito(email, respuesta, "Bloque Eliminado", "Item de parrilla removido correctamente.");
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: item_parrilla consultar id_item");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del bloque a consultar. Uso: item_parrilla consultar id_item", "item_parrilla consultar 1");
                             int idCons = Integer.parseInt(event.getParams().get(0).trim());
                             String[] itemData = itemParrillaService.consultarItem(idCons);
                             if (itemData == null) {
-                                enviarErrorDetallado(email, respuesta, "Bloque No Encontrado", "No existe bloque con ID " + idCons, "item_parrilla listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Bloque No Encontrado", "No existe bloque con ID " + idCons, "item_parrilla listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Bloque #" + idCons, HtmlBuilder.HEADERS_ITEM_PARRILLA, Collections.singletonList(itemData));
                             }
@@ -337,7 +354,7 @@ public class Home {
                             if (alAire != null) {
                                 enviarTabla(email, respuesta, "Programa Actualmente al Aire (Playout Rundown)", HtmlBuilder.HEADERS_ITEM_PARRILLA, Collections.singletonList(alAire));
                             } else {
-                                enviarErrorDetallado(email, respuesta, "Sin Emisión Activa", "No hay bloques de programación activos en este horario.", "item_parrilla listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Sin Emisión Activa", "No hay bloques de programación activos en este horario.", "item_parrilla listar");
                             }
                             break;
                         case Token.HOY:
@@ -348,11 +365,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, itemParrillaService.getComandosItemParrilla());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Bloque de Parrilla", "Acción no reconocida.", itemParrillaService.getComandosItemParrilla());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'item_parrilla'.", itemParrillaService.getComandosItemParrilla());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'item_parrilla'.", itemParrillaService.getComandosItemParrilla());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Bloque de Parrilla", parseErrorMessage(e), itemParrillaService.getComandosItemParrilla());
+                    manejarExcepcionComando(email, respuesta, e, itemParrillaService.getComandosItemParrilla());
                 }
             }
 
@@ -369,7 +389,7 @@ public class Home {
                             enviarTabla(email, respuesta, "CU4 - Materiales de Video (MAM)", HtmlBuilder.HEADERS_MATERIAL_VIDEO, list);
                             break;
                         case Token.LISTAR_PROGRAMA:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: material_video listar_programa id_programa");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del programa. Uso: material listar_programa id_programa", "material listar_programa 1");
                             int idProg = Integer.parseInt(event.getParams().get(0).trim());
                             List<String[]> listProg = materialVideoService.listarPorPrograma(idProg);
                             enviarTabla(email, respuesta, "CU4 - Clips de Video de Programa #" + idProg, HtmlBuilder.HEADERS_MATERIAL_VIDEO, listProg);
@@ -387,18 +407,18 @@ public class Home {
                             enviarTabla(email, respuesta, "Estado técnico de material actualizado", HtmlBuilder.HEADERS_MATERIAL_VIDEO, listEst);
                             break;
                         case Token.ELIMINAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: material_video eliminar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del material a eliminar. Uso: material eliminar id", "material eliminar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             materialVideoService.eliminarMaterial(id);
                             List<String[]> listDel = materialVideoService.listarMateriales();
                             enviarTabla(email, respuesta, "Material de video eliminado", HtmlBuilder.HEADERS_MATERIAL_VIDEO, listDel);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: material_video consultar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del material a consultar. Uso: material consultar id", "material consultar 1");
                             int idCons = Integer.parseInt(event.getParams().get(0).trim());
                             String[] mat = materialVideoService.consultarMaterial(idCons);
                             if (mat == null) {
-                                enviarErrorDetallado(email, respuesta, "Material No Encontrado", "ID " + idCons, "material_video listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Material No Encontrado", "No existe material con ID " + idCons, "material listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Material #" + idCons, HtmlBuilder.HEADERS_MATERIAL_VIDEO, Collections.singletonList(mat));
                             }
@@ -407,11 +427,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, materialVideoService.getComandosMaterial());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Material", "Acción no reconocida.", materialVideoService.getComandosMaterial());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'material'.", materialVideoService.getComandosMaterial());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'material'.", materialVideoService.getComandosMaterial());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Material de Video", parseErrorMessage(e), materialVideoService.getComandosMaterial());
+                    manejarExcepcionComando(email, respuesta, e, materialVideoService.getComandosMaterial());
                 }
             }
 
@@ -450,11 +473,11 @@ public class Home {
                             enviarTabla(email, respuesta, "Control de Calidad (QC) Registrado", HtmlBuilder.HEADERS_VALIDACION, listVal);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: validacion consultar id_item_parrilla");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del bloque a consultar QC. Uso: validacion consultar id_item_parrilla", "validacion consultar 1");
                             int idItem = Integer.parseInt(event.getParams().get(0).trim());
                             String[] val = validacionService.consultarPorItem(idItem);
                             if (val == null) {
-                                enviarErrorDetallado(email, respuesta, "Sin Validación QC", "El bloque #" + idItem + " no tiene registro de QC.", "validacion pendientes");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Sin Validación QC", "El bloque #" + idItem + " no tiene registro de QC.", "validacion pendientes");
                             } else {
                                 enviarTabla(email, respuesta, "Estado QC de Bloque #" + idItem, HtmlBuilder.HEADERS_VALIDACION, Collections.singletonList(val));
                             }
@@ -463,11 +486,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, validacionService.getComandosValidacion());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Validación", "Acción no reconocida.", validacionService.getComandosValidacion());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'validacion'.", validacionService.getComandosValidacion());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'validacion'.", validacionService.getComandosValidacion());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Validación de Emisión", parseErrorMessage(e), validacionService.getComandosValidacion());
+                    manejarExcepcionComando(email, respuesta, e, validacionService.getComandosValidacion());
                 }
             }
 
@@ -489,11 +515,11 @@ public class Home {
                             enviarTabla(email, respuesta, "Cliente publicitario registrado", HtmlBuilder.HEADERS_CLIENTE, listAdd);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: cliente consultar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del cliente a consultar. Uso: cliente consultar id", "cliente consultar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             String[] cli = clienteService.consultarCliente(id);
                             if (cli == null) {
-                                enviarErrorDetallado(email, respuesta, "Cliente No Encontrado", "ID " + id, "cliente listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Cliente No Encontrado", "No existe cliente con ID " + id, "cliente listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Cliente #" + id, HtmlBuilder.HEADERS_CLIENTE, Collections.singletonList(cli));
                             }
@@ -502,11 +528,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, clienteService.getComandosCliente());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Cliente", "Acción no reconocida.", clienteService.getComandosCliente());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'cliente'.", clienteService.getComandosCliente());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'cliente'.", clienteService.getComandosCliente());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Cliente", parseErrorMessage(e), clienteService.getComandosCliente());
+                    manejarExcepcionComando(email, respuesta, e, clienteService.getComandosCliente());
                 }
             }
 
@@ -524,11 +553,11 @@ public class Home {
                             enviarTabla(email, respuesta, "Spot comercial registrado", HtmlBuilder.HEADERS_SPOT, listAdd);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: spot consultar id");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del spot a consultar. Uso: spot consultar id", "spot consultar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             String[] sp = spotService.consultarSpot(id);
                             if (sp == null) {
-                                enviarErrorDetallado(email, respuesta, "Spot No Encontrado", "ID " + id, "spot listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Spot No Encontrado", "No existe spot con ID " + id, "spot listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Spot #" + id, HtmlBuilder.HEADERS_SPOT, Collections.singletonList(sp));
                             }
@@ -537,11 +566,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, spotService.getComandosSpot());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Spot", "Acción no reconocida.", spotService.getComandosSpot());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'spot'.", spotService.getComandosSpot());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'spot'.", spotService.getComandosSpot());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Spot", parseErrorMessage(e), spotService.getComandosSpot());
+                    manejarExcepcionComando(email, respuesta, e, spotService.getComandosSpot());
                 }
             }
 
@@ -560,7 +592,7 @@ public class Home {
                             }
                             break;
                         case Token.LISTAR_ITEM:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: pauta listar_item id_item_parrilla");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del bloque de parrilla. Uso: pauta listar_item id_item_parrilla", "pauta listar_item 1");
                             int idItem = Integer.parseInt(event.getParams().get(0).trim());
                             List<String[]> listItem = pautaService.listarPorItem(idItem);
                             enviarTabla(email, respuesta, "Pautas de Bloque #" + idItem, HtmlBuilder.HEADERS_PAUTA, listItem);
@@ -577,18 +609,18 @@ public class Home {
                             enviarExito(email, respuesta, "Estado de Pauta Modificado", "Pauta comercial actualizada correctamente.");
                             break;
                         case Token.ELIMINAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: pauta eliminar id_pauta");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID de la pauta a eliminar. Uso: pauta eliminar id_pauta", "pauta eliminar 1");
                             int id = Integer.parseInt(event.getParams().get(0).trim());
                             pautaService.eliminarPauta(id);
                             List<String[]> listDel = pautaService.listarPautas();
                             enviarTabla(email, respuesta, "Pauta comercial eliminada", HtmlBuilder.HEADERS_PAUTA, listDel);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: pauta consultar id_pauta");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID de la pauta a consultar. Uso: pauta consultar id_pauta", "pauta consultar 1");
                             int idCons = Integer.parseInt(event.getParams().get(0).trim());
                             String[] pautaData = pautaService.consultarPauta(idCons);
                             if (pautaData == null) {
-                                enviarErrorDetallado(email, respuesta, "Pauta No Encontrada", "No existe pauta comercial con ID " + idCons, "pauta listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Pauta No Encontrada", "No existe pauta comercial con ID " + idCons, "pauta listar");
                             } else {
                                 enviarTabla(email, respuesta, "Detalle de Pauta Comercial #" + idCons, HtmlBuilder.HEADERS_PAUTA, Collections.singletonList(pautaData));
                             }
@@ -597,11 +629,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, pautaService.getComandosPauta());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Pauta", "Acción no reconocida.", pautaService.getComandosPauta());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'pauta'.", pautaService.getComandosPauta());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'pauta'.", pautaService.getComandosPauta());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Pauta Comercial", parseErrorMessage(e), pautaService.getComandosPauta());
+                    manejarExcepcionComando(email, respuesta, e, pautaService.getComandosPauta());
                 }
             }
 
@@ -618,6 +653,7 @@ public class Home {
                             enviarTabla(email, respuesta, "CU7 - Bitácora de Emisión Real (As-Run Log)", HtmlBuilder.HEADERS_EMISION_REAL, list);
                             break;
                         case Token.CONCILIAR:
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del bloque a conciliar. Uso: emision conciliar id_item", "emision conciliar 1");
                             emisionRealService.conciliarEmision(event.getParams());
                             auditoriaService.registrarAuditoria(1, "emision_real_log", "CONCILIAR", "Emisión conciliada: " + event.getParams());
                             List<String[]> listConc = emisionRealService.listarEmisiones();
@@ -634,11 +670,11 @@ public class Home {
                             enviarTabla(email, respuesta, "Emisión Real Registrada en Bitácora", HtmlBuilder.HEADERS_EMISION_REAL, listReg);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: emision_real consultar id_item_parrilla");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del bloque a consultar log. Uso: emision consultar id_item_parrilla", "emision consultar 1");
                             int idItem = Integer.parseInt(event.getParams().get(0).trim());
                             String[] em = emisionRealService.consultarPorItem(idItem);
                             if (em == null) {
-                                enviarErrorDetallado(email, respuesta, "Sin Registro As-Run", "No existe log para bloque #" + idItem, "emision_real listar");
+                                enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Sin Registro As-Run", "No existe log para bloque #" + idItem, "emision listar");
                             } else {
                                 enviarTabla(email, respuesta, "Bitácora As-Run de Bloque #" + idItem, HtmlBuilder.HEADERS_EMISION_REAL, Collections.singletonList(em));
                             }
@@ -652,7 +688,7 @@ public class Home {
                                 if (fallback != null) {
                                     enviarTabla(email, respuesta, "Programa Programado al Aire", HtmlBuilder.HEADERS_ITEM_PARRILLA, Collections.singletonList(fallback));
                                 } else {
-                                    enviarErrorDetallado(email, respuesta, "Sin Registro", "No hay eventos registrados al aire actualmente.", "emision listar");
+                                    enviarErrorDetallado(email, respuesta, ErrorCode.ERR_NEG_001, "Sin Registro", "No hay eventos registrados al aire actualmente.", "emision listar");
                                 }
                             }
                             break;
@@ -660,11 +696,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, emisionRealService.getComandosEmision());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Emisión Real", "Acción no reconocida.", emisionRealService.getComandosEmision());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'emision'.", emisionRealService.getComandosEmision());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'emision'.", emisionRealService.getComandosEmision());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Emisión Real", parseErrorMessage(e), emisionRealService.getComandosEmision());
+                    manejarExcepcionComando(email, respuesta, e, emisionRealService.getComandosEmision());
                 }
             }
 
@@ -677,7 +716,7 @@ public class Home {
                             enviarTabla(email, respuesta, "CU7 - Registro de Auditoría del Sistema", HtmlBuilder.HEADERS_AUDITORIA, list);
                             break;
                         case Token.CONSULTAR:
-                            if (event.getParams().isEmpty()) throw new IllegalArgumentException("Uso: auditoria consultar id_usuario");
+                            if (event.getParams().isEmpty()) throw new CommandException(ErrorCode.ERR_INC_002, "Falta el ID del usuario a consultar auditoría. Uso: auditoria consultar id_usuario", "auditoria consultar 1");
                             int idUser = Integer.parseInt(event.getParams().get(0).trim());
                             List<String[]> listUser = auditoriaService.listarPorUsuario(idUser);
                             enviarTabla(email, respuesta, "Auditoría de Usuario #" + idUser, HtmlBuilder.HEADERS_AUDITORIA, listUser);
@@ -686,11 +725,14 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, auditoriaService.getComandosAuditoria());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Acción Inválida para Auditoría", "Acción no reconocida.", auditoriaService.getComandosAuditoria());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese la acción a ejecutar sobre 'auditoria'.", auditoriaService.getComandosAuditoria());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Acción no reconocida para 'auditoria'.", auditoriaService.getComandosAuditoria());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Auditoría", parseErrorMessage(e), auditoriaService.getComandosAuditoria());
+                    manejarExcepcionComando(email, respuesta, e, auditoriaService.getComandosAuditoria());
                 }
             }
 
@@ -726,14 +768,18 @@ public class Home {
                             mostrarYEnviarHELP(email, respuesta, reporteService.getComandosReporte());
                             break;
                         default:
-                            enviarErrorDetallado(email, respuesta, "Tipo de Reporte Inválido", "Comando no reconocido.", reporteService.getComandosReporte());
-                            break;
+                            if (event.getAction() == 0) {
+                                throw new CommandException(ErrorCode.ERR_INC_001, "Orden incompleta: Ingrese el tipo de reporte. Opciones: general, parrilla, programas, pautas, cumplimiento.", reporteService.getComandosReporte());
+                            } else {
+                                throw new CommandException(ErrorCode.ERR_CMD_003, "Tipo de reporte no reconocido.", reporteService.getComandosReporte());
+                            }
                     }
                 } catch (Exception e) {
-                    enviarErrorDetallado(email, respuesta, "Error en Reporte", parseErrorMessage(e), reporteService.getComandosReporte());
+                    manejarExcepcionComando(email, respuesta, e, reporteService.getComandosReporte());
                 }
             }
 
+            // ============================================================
             // ============================================================
             // MANEJO GENERAL DE ERRORES SINTÁCTICOS
             // ============================================================
@@ -741,31 +787,110 @@ public class Home {
             @Override
             public void error(TokenEvent event) {
                 String cmd = (email != null && email.getSubject() != null) ? email.getSubject().trim() : "";
+                String codigo = event.getErrorCode() != null ? event.getErrorCode() : ErrorCode.ERR_CMD_002;
+                String titulo = ErrorCode.getDescripcionCorta(codigo);
                 String detalle;
-                String sugerencia = sugerirComando(cmd);
-                if (cmd.isEmpty()) {
-                    detalle = "El asunto (Subject) del correo está vacío. Por favor ingrese el comando en el asunto del correo.";
-                } else if (!event.getParams().isEmpty() && event.getParams().get(0) != null && !event.getParams().get(0).trim().isEmpty()) {
-                    String erroneo = event.getParams().get(0).trim();
-                    detalle = "Término no reconocido: '" + erroneo + "'. Revise la ortografía de la entidad o acción.";
+                String sugerencia = event.getSuggestion() != null && !event.getSuggestion().isEmpty()
+                        ? event.getSuggestion()
+                        : sugerirComando(cmd);
+
+                if (!event.getParams().isEmpty() && event.getParams().get(0) != null && !event.getParams().get(0).trim().isEmpty()) {
+                    detalle = event.getParams().get(0);
+                } else if (cmd.isEmpty()) {
+                    codigo = ErrorCode.ERR_CMD_001;
+                    titulo = ErrorCode.getDescripcionCorta(codigo);
+                    detalle = "El asunto (Subject) del correo electrónico está vacío. Por favor ingrese el comando en el asunto.";
                 } else {
                     detalle = "La estructura del comando '" + cmd + "' no coincide con ninguna entidad o acción válida del sistema.";
                 }
-                enviarErrorDetallado(email, respuesta, "Comando No Reconocido", detalle, sugerencia);
+                enviarErrorDetallado(email, respuesta, codigo, titulo, detalle, sugerencia);
             }
 
             @Override
             public void posibleserrores(TokenEvent event) {
                 String cmd = (email != null && email.getSubject() != null) ? email.getSubject().trim() : "";
-                String sugerencia = sugerirComando(cmd);
-                enviarErrorDetallado(email, respuesta, "Error en Parámetros del Comando",
-                        "Los parámetros de '" + cmd + "' están incompletos, tienen formato inválido o faltan campos obligatorios.",
-                        sugerencia);
+                String codigo = event.getErrorCode() != null ? event.getErrorCode() : ErrorCode.ERR_INC_002;
+                String titulo = ErrorCode.getDescripcionCorta(codigo);
+                String sugerencia = event.getSuggestion() != null && !event.getSuggestion().isEmpty()
+                        ? event.getSuggestion()
+                        : sugerirComando(cmd);
+                String detalle = (!event.getParams().isEmpty() && event.getParams().get(0) != null)
+                        ? event.getParams().get(0)
+                        : "Los parámetros de '" + cmd + "' están incompletos, tienen formato inválido o faltan campos obligatorios.";
+                enviarErrorDetallado(email, respuesta, codigo, titulo, detalle, sugerencia);
             }
         });
 
         // Ejecutar interpretación sintáctica
         interpreter.run();
+    }
+
+    private static void manejarExcepcionComando(Email email, SendEmail respuesta, Exception e, String fallbackHelp) {
+        if (e instanceof CommandException) {
+            CommandException ce = (CommandException) e;
+            enviarErrorDetallado(email, respuesta, ce.getErrorCode(), ErrorCode.getDescripcionCorta(ce.getErrorCode()), ce.getMessage(), ce.getSuggestion());
+            return;
+        }
+        if (e instanceof NumberFormatException) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            enviarErrorDetallado(email, respuesta, ErrorCode.ERR_FMT_001, "Formato Numérico Inválido",
+                    "Se esperaba un número entero (ID numérico o cantidad), pero se ingresó un valor no numérico: " + msg,
+                    fallbackHelp);
+            return;
+        }
+        if (e instanceof IllegalArgumentException) {
+            String msg = e.getMessage() != null ? e.getMessage() : "Parámetros inválidos.";
+            String codigo = parseIllegalArgumentErrorCode(msg);
+            enviarErrorDetallado(email, respuesta, codigo, ErrorCode.getDescripcionCorta(codigo), msg, fallbackHelp);
+            return;
+        }
+        if (e instanceof SQLException) {
+            SQLException sqle = (SQLException) e;
+            String codigo = parseSqlErrorCode(sqle);
+            String msg = parseErrorMessage(sqle);
+            enviarErrorDetallado(email, respuesta, codigo, ErrorCode.getDescripcionCorta(codigo), msg, fallbackHelp);
+            return;
+        }
+        enviarErrorDetallado(email, respuesta, ErrorCode.ERR_SYS_001, "Error en Operación", parseErrorMessage(e), fallbackHelp);
+    }
+
+    private static String parseSqlErrorCode(SQLException e) {
+        if (e == null || e.getMessage() == null) return ErrorCode.ERR_BD_005;
+        String m = e.getMessage().toLowerCase();
+        if (m.contains("foreign key") || m.contains("violates foreign key constraint") || m.contains("is not present in table")) {
+            return ErrorCode.ERR_BD_002;
+        }
+        if (m.contains("duplicate key") || m.contains("unique constraint") || m.contains("ya existe")) {
+            return ErrorCode.ERR_BD_003;
+        }
+        if (m.contains("cannot delete") || m.contains("referenced from table") || m.contains("still referenced")) {
+            return ErrorCode.ERR_BD_004;
+        }
+        if (m.contains("not-null") || m.contains("null value in column")) {
+            return ErrorCode.ERR_INC_003;
+        }
+        return ErrorCode.ERR_BD_005;
+    }
+
+    private static String parseIllegalArgumentErrorCode(String msg) {
+        if (msg == null) return ErrorCode.ERR_INC_002;
+        String m = msg.toLowerCase();
+        if (m.contains("fecha") || m.contains("yyyy-mm-dd")) {
+            return ErrorCode.ERR_FMT_002;
+        }
+        if (m.contains("hora") || m.contains("hh:mm")) {
+            return ErrorCode.ERR_FMT_003;
+        }
+        if (m.contains("estado")) {
+            return ErrorCode.ERR_FMT_004;
+        }
+        if (m.contains("faltan parámetros") || m.contains("al menos") || m.contains("insuficientes")) {
+            return ErrorCode.ERR_INC_003;
+        }
+        if (m.contains("uso:") || m.contains("formato:") || m.contains("falta")) {
+            return ErrorCode.ERR_INC_002;
+        }
+        return ErrorCode.ERR_INC_002;
     }
 
     private static String parseErrorMessage(Exception e) {
@@ -867,14 +992,19 @@ public class Home {
         System.out.println("[RESPUESTA EXITO] '" + titulo + "' -> " + email.getFrom() + " | " + mensaje);
     }
 
-    private static void enviarErrorDetallado(Email email, SendEmail respuesta, String titulo, String queFallo, String sugerencia) {
+    public static void enviarErrorDetallado(Email email, SendEmail respuesta, String codigoError, String titulo, String queFallo, String sugerencia) {
         String comandoRecibido = email != null && email.getSubject() != null ? email.getSubject() : "";
-        String html = HtmlBuilder.generarMensajeErrorDetallado(titulo, comandoRecibido, queFallo, sugerencia);
+        String html = HtmlBuilder.generarMensajeErrorDetallado(codigoError, titulo, comandoRecibido, queFallo, sugerencia);
         mostraRespuesta(html);
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
-            respuesta.sendmail(email.getFrom(), "ERROR: " + titulo, html);
+            String subject = "[" + codigoError + "] ERROR: " + titulo;
+            respuesta.sendmail(email.getFrom(), subject, html);
         }
-        System.err.println("[RESPUESTA ERROR] '" + titulo + "' -> " + email.getFrom() + " | " + queFallo);
+        System.err.println("[RESPUESTA ERROR " + codigoError + "] '" + titulo + "' -> " + email.getFrom() + " | " + queFallo);
+    }
+
+    private static void enviarErrorDetallado(Email email, SendEmail respuesta, String titulo, String queFallo, String sugerencia) {
+        enviarErrorDetallado(email, respuesta, ErrorCode.ERR_SYS_001, titulo, queFallo, sugerencia);
     }
 
     private static void mostrarYEnviarHELP(Email email, SendEmail respuesta, String menuAyuda) {

@@ -182,18 +182,31 @@ public class HtmlBuilder {
     }
 
     public static String generarMensajeErrorDetallado(String titulo, String comandoRecibido, String queFallo, String sugerencia) {
+        return generarMensajeErrorDetallado("ERR-CMD", titulo, comandoRecibido, queFallo, sugerencia);
+    }
+
+    public static String generarMensajeErrorDetallado(String codigoError, String titulo, String comandoRecibido, String queFallo, String sugerencia) {
         StringBuilder sb = new StringBuilder();
         sb.append(HTML_OPEN).append(BODY_OPEN);
         sb.append("<div style='max-width: 680px; margin: 30px auto; background: #0d131f; border-radius: 12px; padding: 26px; border: 1px solid #1e293b; border-left: 6px solid #ef4444; box-shadow: 0 16px 36px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif;'>");
         
-        sb.append("<div style='font-size: 11px; font-weight: 700; color: #f87171; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px;'>✖ ERROR DE COMANDO</div>");
+        sb.append("<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;'>");
+        sb.append("<div style='font-size: 11px; font-weight: 700; color: #f87171; letter-spacing: 1.5px; text-transform: uppercase;'>✖ ERROR EN COMANDO DE PLAYOUT</div>");
+        if (codigoError != null && !codigoError.trim().isEmpty()) {
+            sb.append("<span style='background: #dc2626; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.8px; font-family: Consolas, Monaco, monospace;'>[")
+              .append(codigoError).append("]</span>");
+        }
+        sb.append("</div>");
+
         sb.append("<h2 style='margin: 0 0 14px 0; color: #ffffff; font-size: 20px; font-weight: 800;'>").append(titulo).append("</h2>");
 
         sb.append("<div style='margin-bottom: 14px; padding: 12px 14px; background: #080d1a; border-radius: 8px; border: 1px solid #1e293b; font-family: Consolas, Monaco, monospace; font-size: 13px; color: #fbbf24;'>");
         sb.append("<span style='color: #94a3b8;'>Comando recibido:</span> <strong>").append(comandoRecibido != null && !comandoRecibido.isEmpty() ? comandoRecibido : "<i>(asunto vacío)</i>").append("</strong>");
         sb.append("</div>");
 
-        sb.append("<p style='color: #fca5a5; font-size: 14px; line-height: 1.5; margin: 0 0 14px 0;'><strong>⚠️ ¿Qué está mal?:</strong> ").append(queFallo).append("</p>");
+        sb.append("<div style='background: #1e131d; border: 1px solid #7f1d1d; border-radius: 8px; padding: 14px; margin-bottom: 14px;'>");
+        sb.append("<p style='color: #fca5a5; font-size: 14px; line-height: 1.5; margin: 0;'><strong>⚠️ Detalle del Error:</strong> ").append(queFallo).append("</p>");
+        sb.append("</div>");
 
         if (sugerencia != null && !sugerencia.trim().isEmpty()) {
             sb.append("<div style='padding: 14px; background: #0c1b33; border-radius: 8px; border-left: 4px solid #38bdf8; color: #e0f2fe; font-size: 13px; line-height: 1.6;'>");
@@ -202,7 +215,11 @@ public class HtmlBuilder {
             sb.append("</div>");
         }
 
-        sb.append("<div style='margin-top: 18px; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; padding-top: 10px;'>Envía <b>help</b> en el Asunto del correo para ver el manual completo de comandos.</div>");
+        sb.append("<div style='margin-top: 18px; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; padding-top: 10px; display: flex; justify-content: space-between;'>");
+        sb.append("<span>Envía <b>help</b> en el Asunto del correo para ver el manual completo.</span>");
+        sb.append("<span>Código: <b style='color: #f87171;'>").append(codigoError != null ? codigoError : "ERR-GENERAL").append("</b></span>");
+        sb.append("</div>");
+
         sb.append("</div>");
         sb.append(BODY_CLOSE).append(HTML_CLOSE);
         return sb.toString();

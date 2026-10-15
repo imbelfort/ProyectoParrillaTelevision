@@ -441,4 +441,70 @@ public class Token {
             default: return -1;
         }
     }
+
+    public static boolean isCU(String lexeme) {
+        if (lexeme == null || lexeme.trim().isEmpty()) return false;
+        int id = new Token().findByLexeme(lexeme, -1);
+        return 100 <= id && id < 200;
+    }
+
+    public static boolean isAction(String lexeme) {
+        if (lexeme == null || lexeme.trim().isEmpty()) return false;
+        int id = new Token().findByLexeme(lexeme, -1);
+        return 200 <= id && id < 300;
+    }
+
+    public static int getCUId(String lexeme) {
+        if (lexeme == null) return -1;
+        int id = new Token().findByLexeme(lexeme, -1);
+        return (100 <= id && id < 200) ? id : -1;
+    }
+
+    public static int getActionId(String lexeme) {
+        if (lexeme == null) return -1;
+        int id = new Token().findByLexeme(lexeme, -1);
+        return (200 <= id && id < 300) ? id : -1;
+    }
+
+    public static String sugerirEntidadCercana(String palabra) {
+        if (palabra == null || palabra.trim().isEmpty()) return "usuario";
+        String p = java.text.Normalizer.normalize(palabra.toLowerCase().trim(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        if (p.contains("usu") || p.contains("usr") || p.contains("ser")) return "usuario";
+        if (p.contains("rol")) return "rol";
+        if (p.contains("cat") || p.contains("gen")) return "categoria";
+        if (p.contains("prog") || p.contains("show")) return "programa";
+        if (p.contains("parr") || p.contains("grill")) return "parrilla";
+        if (p.contains("item") || p.contains("bloq") || p.contains("play")) return "item";
+        if (p.contains("mat") || p.contains("vid") || p.contains("clip") || p.contains("mam")) return "material";
+        if (p.contains("val") || p.contains("qc") || p.contains("calid")) return "validacion";
+        if (p.contains("cli") || p.contains("anun")) return "cliente";
+        if (p.contains("spot") || p.contains("pub")) return "spot";
+        if (p.contains("paut") || p.contains("cort") || p.contains("tand")) return "pauta";
+        if (p.contains("emi") || p.contains("aire") || p.contains("asrun")) return "emision";
+        if (p.contains("aud") || p.contains("log")) return "auditoria";
+        if (p.contains("rep") || p.contains("est") || p.contains("metr")) return "reporte";
+        return null;
+    }
+
+    public static String sugerirAccionCercana(String palabra) {
+        if (palabra == null || palabra.trim().isEmpty()) return "listar";
+        String p = java.text.Normalizer.normalize(palabra.toLowerCase().trim(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        if (p.contains("list") || p.contains("ver") || p.contains("most") || p.contains("tod")) return "listar";
+        if (p.contains("agr") || p.contains("cre") || p.contains("nuev") || p.contains("add") || p.contains("ins")) return "agregar";
+        if (p.contains("cons") || p.contains("busc") || p.contains("det") || p.contains("inf") || p.contains("get")) return "consultar";
+        if (p.contains("mod") || p.contains("act") || p.contains("edit") || p.contains("upd")) return "modificar";
+        if (p.contains("elim") || p.contains("borr") || p.contains("del") || p.contains("quit")) return "eliminar";
+        if (p.contains("aire") || p.contains("vivo") || p.contains("ahor")) return "al_aire";
+        if (p.contains("hoy") || p.contains("diari")) return "hoy";
+        if (p.contains("est") || p.contains("camb")) return "estado";
+        if (p.contains("pend")) return "pendientes";
+        if (p.contains("apr")) return "aprobar";
+        if (p.contains("rech")) return "rechazar";
+        if (p.contains("conc")) return "conciliar";
+        if (p.contains("disc")) return "discrepancias";
+        if (p.contains("gen")) return "general";
+        if (p.contains("cump")) return "cumplimiento";
+        if (p.contains("help") || p.contains("ayud") || p.contains("man")) return "help";
+        return null;
+    }
 }

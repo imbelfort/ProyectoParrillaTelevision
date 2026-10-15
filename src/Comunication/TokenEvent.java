@@ -11,8 +11,9 @@ public class TokenEvent extends EventObject {
     
     private int action;// accion del caso de uso: add. modify, delete y otros
     private List<String> params; // lista de parametros
-    
     private String sender;// correo que envio el comando
+    private String errorCode; // Codigo de error explicito (ERR-xxx-yyy)
+    private String suggestion; // Sugerencia de formato correcto
      
     public TokenEvent(Object source) {
         super(source);
@@ -53,6 +54,22 @@ public class TokenEvent extends EventObject {
 
     public void setSender(String sender) {
         this.sender = sender;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getSuggestion() {
+        return suggestion;
+    }
+
+    public void setSuggestion(String suggestion) {
+        this.suggestion = suggestion;
     }
     
 
