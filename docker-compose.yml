@@ -1,0 +1,12 @@
+services:
+  parrilla-tv-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: parrilla-tv-server
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1

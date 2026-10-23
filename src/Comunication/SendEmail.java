@@ -8,8 +8,6 @@ package Comunication;
 //import com.juanvladimir13.template.MaryTemplate;
 import Database.ConfigEmailServer;
 import Utils.Email;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -40,7 +38,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
-import proyectomailgrupo12sc.Principal;
 
 public class SendEmail {
 
@@ -93,48 +90,30 @@ public class SendEmail {
                 writer.flush();
                 System.out.println("SMTP: " + reader.readLine());
 
-                if (Principal.cbx_emailsReceptores.isSelected()) {
-                    // Obtener destinatarios desde JTextArea
-                    String[] receptores = getEmailsReceptores();
-
-                    // Usar Set para evitar duplicados y mantener orden
-                    Set<String> destinatarios = new LinkedHashSet<>();
-                    // Incluir el remitente original (quien enviÃ³ el comando) como destinatario
-                    if (esEmailValido(email.getFrom())) {
-                        destinatarios.add(email.getFrom().trim());
-                    }
-
-                    for (String r : receptores) {
-                        boolean valido = esEmailValido(r);
-                        System.out.println("DEBUG: candidato receptor='" + r + "' valido=" + valido);
-                        if (valido) {
-                            destinatarios.add(r.trim());
-                        }
-                    }
-
-                    // Enviar RCPT TO para cada destinatario (usar <> segÃºn RFC)
-                    for (String destinatario : destinatarios) {
-                        command = "RCPT TO:<" + destinatario + ">\r\n";
-                        writer.writeBytes(command);
-                        writer.flush();
-                        System.out.println("SMTP: " + reader.readLine());
-                    }
-                } else {
-                    // Solo al remitente original
-                    String origen = email.getFrom();
-                    if (esEmailValido(origen)) {
-                        command = "RCPT TO:<" + origen.trim() + ">\r\n";
-                        writer.writeBytes(command);
-                        writer.flush();
-                        System.out.println("SMTP: " + reader.readLine());
-                    } else {
-                        // Si no hay destinatario vÃ¡lido, cancelar
-                        System.out.println("Correo de respuesta no enviado: no hay destinatarios vÃ¡lidos");
+                String origen = email.getFrom();
+                if (esEmailValido(origen)) {
+                    command = "RCPT TO:<" + origen.trim() + ">\r\n";
+                    writer.writeBytes(command);
+                    writer.flush();
+                    String rcptRes = reader.readLine();
+                    System.out.println("SMTP: " + rcptRes);
+                    if (rcptRes == null || !rcptRes.startsWith("250")) {
+                        System.out.println("Correo de respuesta no enviado: destinatario no aceptado por SMTP: " + rcptRes);
+                        try {
+                            writer.writeBytes("QUIT\r\n");
+                            writer.flush();
+                        } catch (Exception ignored) {}
                         writer.close();
                         reader.close();
                         socket.close();
                         return;
                     }
+                } else {
+                    System.out.println("Correo de respuesta no enviado: remitente invalido (" + origen + ")");
+                    writer.close();
+                    reader.close();
+                    socket.close();
+                    return;
                 }
 
                 // Escribir Mensaje
@@ -144,19 +123,13 @@ public class SendEmail {
                 writer.flush();
                 System.out.println("SMTP: " + reader.readLine());
 
-                // Construir cabeceras mÃ­nimas vÃ¡lidas (From, To, Subject, MIME)
+                // Construir cabeceras minimas validas (From, To, Subject, MIME)
                 StringBuilder data = new StringBuilder();
                 data.append("From: <").append(user_emisor).append(">\r\n");
 
-                // Reconstruir lista To a partir de los RCPT enviados (usar getEmailsReceptores + remitente)
                 List<String> toList = new ArrayList<>();
-                if (Principal.cbx_emailsReceptores.isSelected()) {
-                    if (esEmailValido(email.getFrom())) toList.add(email.getFrom().trim());
-                    for (String r : getEmailsReceptores()) {
-                        if (esEmailValido(r)) toList.add(r.trim());
-                    }
-                } else {
-                    if (esEmailValido(email.getFrom())) toList.add(email.getFrom().trim());
+                if (esEmailValido(email.getFrom())) {
+                    toList.add(email.getFrom().trim());
                 }
 
                 if (!toList.isEmpty()) {
@@ -308,116 +281,39 @@ public class SendEmail {
     }
 
     public void sendmail(String receptor, String subject, String html) {
+        if (!esEmailValido(receptor)) {
+            System.err.println("[SMTP] Email invalido: " + receptor);
+            return;
+        }
         try {
-            Properties p = new Properties();
-            p.put("mail.smtp.host", "smtp.gmail.com");
-            p.put("mail.smtp.starttls.enable", "true");
-            p.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-            p.put("mail.smtp.port", "587");
-            p.put("mail.smtp.auth", "true");
-
-            Session s = Session.getDefaultInstance(p);
-
-            MimeMessage mensaje = new MimeMessage(s);
-            mensaje.setFrom(new InternetAddress("medinytalimber.123@gmail.com"));
-            mensaje.setSubject(subject != null ? subject : "Respuesta Sistema TV", "UTF-8");
-            mensaje.setContent(html != null ? html : "", "text/html; charset=UTF-8");
-
-            if (Principal.cbx_emailsReceptores != null && Principal.cbx_emailsReceptores.isSelected()) {
-                Set<String> destinatarios = new HashSet<>();
-                if (esEmailValido(receptor)) {
-                    destinatarios.add(receptor.trim());
-                }
-                String[] receptores = getEmailsReceptores();
-                if (receptores != null) {
-                    for (String email : receptores) {
-                        if (esEmailValido(email)) {
-                            destinatarios.add(email.trim());
-                        }
-                    }
-                }
-                for (String email : destinatarios) {
-                    mensaje.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
-                }
-            } else {
-                if (esEmailValido(receptor)) {
-                    mensaje.addRecipient(Message.RecipientType.TO, new InternetAddress(receptor.trim()));
-                } else {
-                    System.out.println("Email invalido: " + receptor);
-                    return;
-                }
-            }
-
-            Transport t = s.getTransport("smtp");
-            t.connect("medinytalimber.123@gmail.com", "xgyxhcqqwxjkmydj");
-            t.sendMessage(mensaje, mensaje.getAllRecipients());
-            t.close();
-            System.out.println("[SMTP] Correo enviado exitosamente a: " + receptor);
-        } catch (MessagingException ex) {
-            Logger.getLogger(SendEmail.class.getName()).log(Level.SEVERE, null, ex);
-            System.err.println("[SMTP ERROR] Error enviando correo: " + ex.getMessage());
-        }
-    }
-
-  public void sendmail(String receptor, String subject) {
-    try {
-        // Configuración SMTP
-        Properties p = new Properties();
-        p.put("mail.smtp.host", "smtp.gmail.com");
-        p.put("mail.smtp.starttls.enable", "true");
-        p.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-        p.put("mail.smtp.port", "587");
-        p.put("mail.smtp.auth", "true");
-
-        Session s = Session.getDefaultInstance(p);
-
-        MimeMessage mensaje = new MimeMessage(s);
-        mensaje.setFrom(new InternetAddress("medinytalimber.123@gmail.com"));
-        mensaje.setSubject(subject);
-        mensaje.setText("enviado");
-
-        // Agregar destinatarios según estado del checkbox
-        if (Principal.cbx_emailsReceptores != null && Principal.cbx_emailsReceptores.isSelected()) {
-            Set<String> destinatarios = new HashSet<>();
-
-            if (esEmailValido(receptor)) {
-                destinatarios.add(receptor.trim());
-            }
-
-            String[] receptores = getEmailsReceptores();
-            if (receptores != null) {
-                for (String email : receptores) {
-                    if (esEmailValido(email)) {
-                        destinatarios.add(email.trim());
-                    }
-                }
-            }
-
-            for (String email : destinatarios) {
-                mensaje.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
-            }
-        } else {
-            if (esEmailValido(receptor)) {
+            // Intentar primero con el servidor oficial Tecnoweb (Socket SMTP puerto 25)
+            Email email = new Email(receptor, subject != null ? subject : "Respuesta Sistema TV");
+            responseUser(email, html != null ? html : "");
+        } catch (Exception ex) {
+            System.err.println("[SMTP ERROR] Error enviando correo via socket SMTP: " + ex.getMessage());
+            // Fallback a JavaMail si fuera necesario
+            try {
+                Properties p = new Properties();
+                p.put("mail.smtp.host", SERVER);
+                p.put("mail.smtp.port", String.valueOf(PORT_SMTP));
+                p.put("mail.smtp.auth", "false");
+                Session s = Session.getInstance(p);
+                MimeMessage mensaje = new MimeMessage(s);
+                mensaje.setFrom(new InternetAddress(user_emisor));
+                mensaje.setSubject(subject != null ? subject : "Respuesta Sistema TV", "UTF-8");
+                mensaje.setContent(html != null ? html : "", "text/html; charset=UTF-8");
                 mensaje.addRecipient(Message.RecipientType.TO, new InternetAddress(receptor.trim()));
-            } else {
-                System.out.println("Email invalido: " + receptor);
-                return;
+                Transport.send(mensaje);
+                System.out.println("[SMTP] Correo enviado exitosamente via JavaMail a: " + receptor);
+            } catch (Exception e2) {
+                System.err.println("[SMTP FALLBACK ERROR] " + e2.getMessage());
             }
         }
-
-        Transport t = s.getTransport("smtp");
-        t.connect("medinytalimber.123@gmail.com", "xgyxhcqqwxjkmydj");
-        System.out.println("Enviando...");
-        t.sendMessage(mensaje, mensaje.getAllRecipients());
-        t.close();
-        System.out.println("Mensaje enviado");
-
-    } catch (MessagingException ex) {
-        Logger.getLogger(SendEmail.class.getName()).log(Level.SEVERE, null, ex);
-        System.out.println("Correo no enviado");
     }
-}
 
+    public void sendmail(String receptor, String subject) {
+        sendmail(receptor, subject, "<h2>Notificacion del Sistema</h2><p>" + subject + "</p>");
+    }
 
     public String mensajeHtml(String mensaje) {
         String html = "<h2>%s</h2>";
@@ -432,24 +328,7 @@ public class SendEmail {
     }
 
     public String[] getEmailsReceptores() {
-        String emailsReceptores = Principal.ta_emailsReceptores.getText();
-
-        if (emailsReceptores == null || emailsReceptores.trim().isEmpty()) {
-            return new String[0]; // Retorna arreglo vacÃ­o si no hay nada
-        }
-
-        // Separar por saltos de lÃ­nea y limpiar cada email
-        String[] lineas = emailsReceptores.split("\\r?\\n");
-
-        List<String> resultado = new ArrayList<>();
-        for (String linea : lineas) {
-            String email = linea.trim();
-            if (!email.isEmpty()) {
-                resultado.add(email);
-            }
-        }
-
-        return resultado.toArray(new String[0]);
+        return new String[0];
     }
 
         // Normaliza saltos de lÃ­nea a CRLF y aplica dot-stuffing para DATA SMTP

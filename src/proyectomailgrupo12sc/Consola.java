@@ -55,11 +55,33 @@ public class Consola {
         System.out.println("=================================================================");
 
         Scanner scanner = new Scanner(System.in);
-        String remitenteSimulado = "admin@tecnoweb.org.bo";
+        String remitenteSimulado = "grupo12sc@tecnoweb.org.bo";
+
+        if (!scanner.hasNextLine()) {
+            System.out.println("[INFO] Demonio en segundo plano sin terminal interactiva detectado (Docker / headless).");
+            System.out.println("[INFO] El servidor de correos continuara monitoreando indefinidamente...");
+            try {
+                while (true) {
+                    Thread.sleep(60000);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.out.println("[INFO] Demonio detenido.");
+            }
+            return;
+        }
 
         while (true) {
             System.out.print("\nparrilla-tv> ");
             if (!scanner.hasNextLine()) {
+                System.out.println("[INFO] Fin de entrada interactiva. Manteniendo servidor activo...");
+                try {
+                    while (true) {
+                        Thread.sleep(60000);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
                 break;
             }
             String linea = scanner.nextLine().trim();
@@ -72,6 +94,12 @@ public class Consola {
                 System.out.println("[INFO] Deteniendo servidor de consola. ¡Hasta luego!");
                 System.exit(0);
                 break;
+            }
+
+            if (linea.toLowerCase().startsWith("set-from ")) {
+                remitenteSimulado = linea.substring(9).trim();
+                System.out.println("[OK] Remitente simulado cambiado a: " + remitenteSimulado);
+                continue;
             }
 
             try {

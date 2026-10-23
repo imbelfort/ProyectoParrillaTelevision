@@ -8,12 +8,9 @@ import Utils.Email;
 import Utils.ErrorCode;
 import Utils.Interpreter;
 import Utils.Token;
-import proyectomailgrupo12sc.Principal;
-
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import javax.swing.SwingUtilities;
 
 public class Home {
 
@@ -1017,15 +1014,7 @@ public class Home {
     }
 
     public static void mostraRespuesta(String html) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                if (Principal.ta_respuesta != null) {
-                    Principal.ta_respuesta.setContentType("text/html");
-                    Principal.ta_respuesta.setText(html);
-                }
-            } catch (Exception ignored) {
-            }
-        });
+        // En modo consola la respuesta se envia por correo y se loguea en terminal
     }
 
     private static String getMenuGeneralAyuda() {

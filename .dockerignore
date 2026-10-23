@@ -1,0 +1,8 @@
+.git
+build
+nbproject
+diagrams
+*.md
+test
+sources.txt
+test_sources.txt

@@ -313,9 +313,16 @@ public class Extractor {
             if (line == null) {
                 continue;
             }
-            String trimmed = line.trim();
-            if (trimmed.toLowerCase().startsWith(prefix)) {
-                StringBuilder value = new StringBuilder(trimmed.substring(prefix.length()).trim());
+            // Fin de cabeceras al encontrar linea vacia
+            if (line.trim().isEmpty()) {
+                break;
+            }
+            // Lineas con espacio o tab son continuaciones plegadas, no inicios de cabecera
+            if (line.startsWith(" ") || line.startsWith("\t")) {
+                continue;
+            }
+            if (line.toLowerCase().startsWith(prefix)) {
+                StringBuilder value = new StringBuilder(line.substring(prefix.length()).trim());
                 for (int j = i + 1; j < lines.length; j++) {
                     String continuation = lines[j];
                     if (continuation == null || continuation.isEmpty()) {
@@ -327,10 +334,6 @@ public class Extractor {
                     value.append(' ').append(continuation.trim());
                 }
                 return value.toString().trim();
-            }
-            // Fin de cabeceras
-            if (trimmed.isEmpty()) {
-                break;
             }
         }
         return null;
