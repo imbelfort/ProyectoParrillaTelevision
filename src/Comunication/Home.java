@@ -974,6 +974,7 @@ public class Home {
     private static void enviarTabla(Email email, SendEmail respuesta, String titulo, String[] headers, List<String[]> filas) {
         String html = HtmlBuilder.generarTabla(titulo, headers, filas);
         mostraRespuesta(html);
+        imprimirTablaConsola(titulo, headers, filas);
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
             respuesta.sendmail(email.getFrom(), titulo, html);
         }
@@ -983,6 +984,7 @@ public class Home {
     private static void enviarExito(Email email, SendEmail respuesta, String titulo, String mensaje) {
         String html = HtmlBuilder.generarMensajeExito(titulo, mensaje);
         mostraRespuesta(html);
+        System.out.println("\n>>> [EXITO] " + titulo + " | " + mensaje);
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
             respuesta.sendmail(email.getFrom(), titulo, html);
         }
@@ -993,6 +995,11 @@ public class Home {
         String comandoRecibido = email != null && email.getSubject() != null ? email.getSubject() : "";
         String html = HtmlBuilder.generarMensajeErrorDetallado(codigoError, titulo, comandoRecibido, queFallo, sugerencia);
         mostraRespuesta(html);
+        System.err.println("\n>>> [ERROR " + codigoError + "] " + titulo);
+        System.err.println("    Detalle: " + queFallo);
+        if (sugerencia != null && !sugerencia.isEmpty()) {
+            System.err.println("    Sugerencia: " + sugerencia);
+        }
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
             String subject = "[" + codigoError + "] ERROR: " + titulo;
             respuesta.sendmail(email.getFrom(), subject, html);
@@ -1007,6 +1014,7 @@ public class Home {
     private static void mostrarYEnviarHELP(Email email, SendEmail respuesta, String menuAyuda) {
         String html = HtmlBuilder.generarMenuAyudaHtml(menuAyuda);
         mostraRespuesta(html);
+        System.out.println("\n" + menuAyuda + "\n");
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
             respuesta.sendmail(email.getFrom(), "AYUDA - Sistema de Parrilla de Televisión", html);
         }
@@ -1014,7 +1022,63 @@ public class Home {
     }
 
     public static void mostraRespuesta(String html) {
-        // En modo consola la respuesta se envia por correo y se loguea en terminal
+        // En modo consola la respuesta se muestra formateada en consola y se despacha por SMTP
+    }
+
+    public static void imprimirTablaConsola(String titulo, String[] headers, List<String[]> filas) {
+        if (headers == null || headers.length == 0) return;
+        System.out.println("\n" + repetir('=', 95));
+        System.out.println("  " + titulo);
+        System.out.println(repetir('=', 95));
+
+        if (filas == null || filas.isEmpty()) {
+            System.out.println("  (0 registros encontrados)");
+            System.out.println(repetir('=', 95) + "\n");
+            return;
+        }
+
+        int numCols = headers.length;
+        int[] widths = new int[numCols];
+        for (int i = 0; i < numCols; i++) {
+            widths[i] = Math.max(headers[i].length(), 4);
+        }
+        for (String[] fila : filas) {
+            for (int i = 0; i < numCols && i < fila.length; i++) {
+                String val = (fila[i] != null) ? fila[i].trim() : "";
+                if (val.length() > widths[i]) {
+                    widths[i] = Math.min(val.length(), 28);
+                }
+            }
+        }
+
+        StringBuilder sbH = new StringBuilder(" ");
+        StringBuilder sbDiv = new StringBuilder(" ");
+        for (int i = 0; i < numCols; i++) {
+            sbH.append(String.format("%-" + widths[i] + "s | ", headers[i]));
+            sbDiv.append(repetir('-', widths[i])).append("-+-");
+        }
+        System.out.println(sbH.toString());
+        System.out.println(sbDiv.toString());
+
+        for (String[] fila : filas) {
+            StringBuilder sbR = new StringBuilder(" ");
+            for (int i = 0; i < numCols; i++) {
+                String val = (i < fila.length && fila[i] != null) ? fila[i].trim() : "";
+                if (val.length() > widths[i]) {
+                    val = val.substring(0, Math.max(0, widths[i] - 3)) + "...";
+                }
+                sbR.append(String.format("%-" + widths[i] + "s | ", val));
+            }
+            System.out.println(sbR.toString());
+        }
+        System.out.println(repetir('=', 95) + "\n");
+    }
+
+    private static String repetir(char c, int n) {
+        if (n <= 0) return "";
+        char[] arr = new char[n];
+        java.util.Arrays.fill(arr, c);
+        return new String(arr);
     }
 
     private static String getMenuGeneralAyuda() {

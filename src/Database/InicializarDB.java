@@ -116,6 +116,14 @@ public class InicializarDB {
                     ")"
             );
 
+            // Migración defensiva en caso de que la tabla 'roles' proviniera de un esquema previo
+            try {
+                stmt.executeUpdate("ALTER TABLE roles ADD COLUMN IF NOT EXISTS estado VARCHAR(30) DEFAULT 'ACTIVO'");
+            } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("ALTER TABLE roles ADD COLUMN IF NOT EXISTS fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            } catch (SQLException ignored) {}
+
             stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS usuario_roles (" +
                     "id_usuario INTEGER NOT NULL, " +
