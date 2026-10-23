@@ -173,24 +173,45 @@ Siga esta secuencia cronológica en la consola para recorrer todo el flujo de tr
     ```
     cliente listar
     ```
-28. **Listar spots comerciales disponibles:**
+28. **Consultar detalle de un cliente:**
+    ```
+    cliente consultar 1
+    ```
+29. **Registrar nuevo cliente anunciante:**
+    ```
+    cliente agregar Cerveceria Paceña,1099887766,Lic. Banegas,contacto@cbn.bo,70012345
+    ```
+30. **Listar spots comerciales disponibles:**
     ```
     spot listar
     ```
-29. **Insertar spot publicitario en tanda de un bloque:**
+31. **Consultar detalle de un spot:**
+    ```
+    spot consultar 1
+    ```
+32. **Registrar nuevo spot comercial asociado al cliente:**
+    ```
+    spot agregar 1,SPOT-99,Promo Fin de Año 30s,30
+    ```
+    *(id_cliente: 1 | código: SPOT-99 | título: Promo Fin de Año 30s | duración: 30 seg)*
+33. **Insertar spot publicitario en tanda de un bloque:**
     ```
     pauta agregar 1,1,CORTE_1,1
     ```
     *(id_item: 1 | id_spot: 1 | tanda: CORTE_1 | orden: 1)*
-30. **Listar pautas programadas:**
+34. **Listar pautas programadas:**
     ```
     pauta listar
     ```
-31. **Generar reporte de parrilla:**
+35. **Consultar una pauta específica:**
+    ```
+    pauta consultar 1
+    ```
+36. **Generar reporte de parrilla:**
     ```
     reporte parrilla
     ```
-32. **Generar reporte de programas:**
+37. **Generar reporte de programas:**
     ```
     reporte programas
     ```
@@ -200,72 +221,90 @@ Siga esta secuencia cronológica en la consola para recorrer todo el flujo de tr
 ### FASE 3: ROL ENCARGADO DE CONTENIDOS Y CONTROL DE CALIDAD (`as contenidos`)
 *Responsable del almacenamiento de video (MAM), inspección técnica QC previa al aire, certificación de comerciales y conciliación de emisión real.*
 
-33. **Cambiar al rol de Contenidos / QC en consola:**
+38. **Cambiar al rol de Contenidos / QC en consola:**
     ```
     as contenidos
     ```
-34. **Ingestar clip de video asociado a un programa:**
+39. **Ingestar clip de video asociado a un programa:**
     ```
     material agregar 1,CLIP-77,Cabecera En Familia,60
     ```
     *(id_programa: 1 | código: CLIP-77 | título: Cabecera En Familia | duración: 60 seg)*
-35. **Listar materiales en el storage MAM:**
+40. **Listar materiales en el storage MAM:**
     ```
     material listar
     ```
-36. **Consultar detalle del material de video:**
+41. **Consultar detalle del material de video:**
     ```
     material consultar 1
     ```
-37. **Ver materiales de un programa específico:**
+42. **Ver materiales de un programa específico:**
     ```
     material listar_programa 1
     ```
-38. **Aprobar estado técnico del material:**
+43. **Aprobar estado técnico del material:**
     ```
     material estado 1,LISTO
     ```
-39. **Consultar bloques de parrilla pendientes de revisión técnica (QC):**
+44. **Consultar bloques de parrilla pendientes de revisión técnica (QC):**
     ```
     validacion pendientes
     ```
-40. **Aprobar bloque para su salida al aire:**
+45. **Aprobar bloque para su salida al aire:**
     ```
     validacion aprobar 1
     ```
     *(Aprobado audio broadcast -24 LKFS/dB y video 16:9)*
-41. **Consultar resultado de control de calidad del bloque:**
+46. **Consultar resultado de control de calidad del bloque:**
     ```
     validacion consultar 1
     ```
-42. **Certificar que el comercial publicitario salió al aire:**
+47. **Certificar que el comercial publicitario salió al aire:**
     ```
     pauta estado 1,EMITIDO
     ```
-43. **Conciliar la emisión del bloque con la parrilla oficial:**
+48. **Conciliar la emisión del bloque con la parrilla oficial:**
     ```
     emision conciliar 1
     ```
-44. **Ver bitácora de emisión real (As-Run Log):**
+49. **Ver bitácora de emisión real (As-Run Log):**
     ```
     emision listar
     ```
-45. **Revisar si hubo desfases o discrepancias de tiempo:**
+50. **Revisar si hubo desfases o discrepancias de tiempo:**
     ```
     emision discrepancias
     ```
-46. **Consultar el evento o programa al aire:**
+51. **Consultar el evento o programa al aire:**
     ```
     emision al_aire
     ```
-47. **Generar reporte de certificación y cobro de pautas:**
+52. **Generar reporte de certificación y cobro de pautas:**
     ```
     reporte pautas
     ```
-48. **Generar reporte de cumplimiento de emisión:**
+53. **Generar reporte de cumplimiento de emisión:**
     ```
     reporte cumplimiento
     ```
+
+---
+
+## 📋 COMANDOS RÁPIDOS DE CLIENTES, SPOTS Y PUBLICIDAD (CU6)
+
+| Operación | Comando Exacto | Descripción |
+| :--- | :--- | :--- |
+| **CLIENTES LIST** | `cliente listar` | Muestra todos los clientes anunciantes |
+| **CLIENTE VIEW** | `cliente consultar 1` | Ficha técnica y contacto del cliente #1 |
+| **CLIENTE ADD** | `cliente agregar Entel,1020304050,Gerente,ventas@entel.bo,70001122` | Registra nueva empresa anunciante |
+| **SPOTS LIST** | `spot listar` | Catálogo de spots comerciales |
+| **SPOT VIEW** | `spot consultar 1` | Detalle del spot y anunciante asociado |
+| **SPOT ADD** | `spot agregar 1,SPOT-03,Promo Verano 2026,30` | Ingesta spot con duración en segundos |
+| **PAUTA LIST** | `pauta listar` *(o `pauta listar 1` por bloque)* | Playlist de tandas comerciales |
+| **PAUTA VIEW** | `pauta consultar 1` | Detalle de inserción en tanda |
+| **PAUTA ADD** | `pauta agregar 1,1,CORTE_1,1` | Inserta spot en bloque y tanda |
+| **PAUTA ESTADO**| `pauta estado 1,EMITIDO` | Certifica la salida al aire del anuncio |
+| **PAUTA DEL** | `pauta eliminar 2` | Cancela la pauta comercial |
 
 ---
 
