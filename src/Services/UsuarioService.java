@@ -120,39 +120,93 @@ public class UsuarioService {
     }
 
     public void actualizarUsuario(List<String> params, String fotoPerfil) throws SQLException {
-        if (params.size() < 10) {
+        if (params.size() < 2) {
             throw new IllegalArgumentException(
-                    "Parametros insuficientes. Formato: usuario modificar " +
-                    "id,nombre,apellidos,ci,email,telefono,direccion,fecha_nacimiento,password,estado"
+                    "Parametros insuficientes. Formato: usuario modificar id,nombre,apellidos,email,password,rol,estado"
             );
         }
 
         int idUsuario = Integer.parseInt(params.get(0).trim());
-        String ci = params.get(3) != null ? params.get(3).trim().toUpperCase() : null;
-        String email = params.get(4) != null ? params.get(4).trim().toLowerCase() : null;
+        String[] actual = usuarioDAO.readById(idUsuario);
+        if (actual == null) {
+            throw new SQLException("No existe usuario con ID " + idUsuario);
+        }
+
+        String nombre = actual[1];
+        String apellidos = actual[2];
+        String ci = actual[3];
+        String email = actual[4];
+        String telefono = actual[5];
+        String direccion = actual[6];
+        String foto = (fotoPerfil != null && !fotoPerfil.trim().isEmpty()) ? fotoPerfil : actual[7];
+        String estado = actual[8];
+        String password = actual[9];
+        Date fechaNacimiento = null;
+        if (actual[10] != null && !actual[10].trim().isEmpty()) {
+            try { fechaNacimiento = Date.valueOf(actual[10].trim()); } catch (Exception ignored) {}
+        }
+        String rol = null;
+
+        if (params.size() >= 10) {
+            nombre = params.get(1).trim();
+            apellidos = params.get(2).trim();
+            ci = params.get(3) != null ? params.get(3).trim().toUpperCase() : ci;
+            email = params.get(4) != null ? params.get(4).trim().toLowerCase() : email;
+            telefono = params.get(5).trim();
+            direccion = params.get(6).trim();
+            fechaNacimiento = parseFechaNacimiento(params.get(7));
+            password = params.get(8).trim();
+            estado = params.get(9).trim().toUpperCase();
+        } else if (params.size() == 7) {
+            nombre = params.get(1).trim();
+            apellidos = params.get(2).trim();
+            email = params.get(3).trim().toLowerCase();
+            password = params.get(4).trim();
+            rol = params.get(5).trim();
+            estado = params.get(6).trim().toUpperCase();
+        } else if (params.size() == 6) {
+            nombre = params.get(1).trim();
+            apellidos = params.get(2).trim();
+            email = params.get(3).trim().toLowerCase();
+            password = params.get(4).trim();
+            estado = params.get(5).trim().toUpperCase();
+        } else if (params.size() == 5) {
+            nombre = params.get(1).trim();
+            apellidos = params.get(2).trim();
+            email = params.get(3).trim().toLowerCase();
+            estado = params.get(4).trim().toUpperCase();
+        } else {
+            nombre = params.get(1).trim();
+            if (params.size() > 2) apellidos = params.get(2).trim();
+            if (params.size() > 3) email = params.get(3).trim().toLowerCase();
+        }
 
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(idUsuario);
-        usuario.setNombre(params.get(1).trim());
-        usuario.setApellidos(params.get(2).trim());
+        usuario.setNombre(nombre);
+        usuario.setApellidos(apellidos);
         usuario.setCi(ci);
         usuario.setEmail(email);
-        usuario.setTelefono(params.get(5).trim());
-        usuario.setDireccion(params.get(6).trim());
-        usuario.setFechaNacimiento(parseFechaNacimiento(params.get(7)));
-        usuario.setContrasena(params.get(8).trim());
-        usuario.setEstado(params.get(9).trim().toUpperCase());
-
-        if (fotoPerfil == null || fotoPerfil.trim().isEmpty()) {
-            String[] actual = usuarioDAO.readById(idUsuario);
-            if (actual != null && actual.length > 7) {
-                usuario.setFotoPerfil(actual[7]);
-            }
-        } else {
-            usuario.setFotoPerfil(fotoPerfil);
-        }
+        usuario.setTelefono(telefono);
+        usuario.setDireccion(direccion);
+        usuario.setFechaNacimiento(fechaNacimiento);
+        usuario.setContrasena(password);
+        usuario.setFotoPerfil(foto);
+        usuario.setEstado(estado);
 
         usuarioDAO.update(usuario);
+
+        if (rol != null && !rol.trim().isEmpty()) {
+            int idRol = 2;
+            String rUp = rol.trim().toUpperCase();
+            if (rUp.contains("ADMIN")) idRol = 1;
+            else if (rUp.contains("PROG")) idRol = 2;
+            else if (rUp.contains("CONTENID") || rUp.contains("ENCARGAD")) idRol = 3;
+            else {
+                try { idRol = Integer.parseInt(rUp); } catch (Exception ignored) {}
+            }
+            new DAO.RolDAO().asignarRolUsuario(idUsuario, idRol);
+        }
     }
 
     public void eliminarUsuario(int id) throws SQLException {

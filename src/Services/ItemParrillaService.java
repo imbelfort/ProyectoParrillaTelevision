@@ -33,17 +33,17 @@ public class ItemParrillaService {
     }
 
     public void modificarItemParrilla(List<String> params) throws SQLException {
-        if (params.size() < 5) {
+        if (params.size() < 3) {
             throw new IllegalArgumentException(
-                    "Formato: item_parrilla modificar id_item,hora_inicio,hora_fin,tipo_emision,estado [observaciones]"
+                    "Formato: item modificar id_item,hora_inicio,hora_fin [tipo_emision] [estado] [observaciones]"
             );
         }
         ItemParrilla item = new ItemParrilla();
         item.setId(Integer.parseInt(params.get(0).trim()));
         item.setHoraInicio(parseTime(params.get(1).trim()));
         item.setHoraFin(parseTime(params.get(2).trim()));
-        item.setTipoEmision(params.get(3).trim().toUpperCase());
-        item.setEstado(params.get(4).trim().toUpperCase());
+        item.setTipoEmision(params.size() > 3 ? params.get(3).trim().toUpperCase() : "GRABADO");
+        item.setEstado(params.size() > 4 ? params.get(4).trim().toUpperCase() : "PROGRAMADO");
         item.setObservaciones(params.size() > 5 ? params.get(5).trim() : null);
         dao.update(item);
     }

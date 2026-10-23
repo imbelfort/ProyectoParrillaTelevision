@@ -69,21 +69,32 @@ public class ProgramaService {
     }
 
     public void modificarPrograma(List<String> params) throws SQLException {
-        if (params.size() < 9) {
+        if (params.size() < 3) {
             throw new IllegalArgumentException(
-                    "Formato: programa modificar id,codigo,titulo,descripcion,id_categoria,clasificacion_edad,duracion_minutos,origen,estado"
+                    "Formato: programa modificar id,codigo,titulo,[descripcion],[id_categoria],[clasificacion_edad],[duracion_minutos],[origen],[estado]"
             );
         }
+        int id = Integer.parseInt(params.get(0).trim());
         Programa p = new Programa();
-        p.setId(Integer.parseInt(params.get(0).trim()));
+        p.setId(id);
         p.setCodigo(params.get(1).trim().toUpperCase());
         p.setTitulo(params.get(2).trim());
-        p.setDescripcion(params.get(3).trim());
-        p.setIdCategoria(Integer.parseInt(params.get(4).trim()));
-        p.setClasificacionEdad(params.get(5).trim().toUpperCase());
-        p.setDuracionEstandarMinutos(Integer.parseInt(params.get(6).trim()));
-        p.setOrigen(params.get(7).trim().toUpperCase());
-        p.setEstado(params.get(8).trim().toUpperCase());
+
+        if (params.size() >= 9) {
+            p.setDescripcion(params.get(3).trim());
+            p.setIdCategoria(resolverCategoria(params.get(4).trim()));
+            p.setClasificacionEdad(params.get(5).trim().toUpperCase());
+            p.setDuracionEstandarMinutos(Integer.parseInt(params.get(6).trim()));
+            p.setOrigen(params.get(7).trim().toUpperCase());
+            p.setEstado(params.get(8).trim().toUpperCase());
+        } else {
+            p.setDescripcion(params.size() > 3 ? params.get(3).trim() : params.get(2).trim());
+            p.setIdCategoria(params.size() > 4 ? resolverCategoria(params.get(4).trim()) : 1);
+            p.setClasificacionEdad(params.size() > 5 ? params.get(5).trim().toUpperCase() : "ATP");
+            p.setDuracionEstandarMinutos(params.size() > 6 ? Integer.parseInt(params.get(6).trim()) : 60);
+            p.setOrigen(params.size() > 7 ? params.get(7).trim().toUpperCase() : "NACIONAL");
+            p.setEstado("ACTIVO");
+        }
         dao.update(p);
     }
 
