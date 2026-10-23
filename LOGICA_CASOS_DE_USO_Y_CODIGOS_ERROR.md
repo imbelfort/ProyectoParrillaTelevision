@@ -1,4 +1,4 @@
-# 📡 VALIDACIÓN DE LÓGICA DE NEGOCIO POR CASOS DE USO Y CATÁLOGO DE CÓDIGOS DE ERROR EXPLÍCITOS
+hizo # 📡 VALIDACIÓN DE LÓGICA DE NEGOCIO POR CASOS DE USO Y CATÁLOGO DE CÓDIGOS DE ERROR EXPLÍCITOS
 ## Sistema de Gestión y Automatización de Parrilla de Televisión (Playout Automation)
 **Institución:** FICCT - UAGRM | **Grupo:** 12 SC  
 **Mecanismo de Interacción:** Comandos vía Asunto (Subject) de Correo Electrónico (POP3/SMTP)

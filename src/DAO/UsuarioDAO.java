@@ -12,7 +12,7 @@ public class UsuarioDAO {
 
     public void create(Usuario usuario) throws SQLException {
         String sql = "INSERT INTO usuario " +
-                "(nombre, apellidos, ci, email, telefono, direccion, password, foto_perfil, fecha_nacimiento, estado) " +
+                "(nombre, apellidos, ci, email, telefono, direccion, password, foto, fecha_nacimiento, estado) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection con = Conexion.getInstancia().EstablecerConexion();
@@ -42,7 +42,7 @@ public class UsuarioDAO {
     public String[] readById(int id) throws SQLException {
         String sql = "SELECT " +
                 "id_usuario, nombre, apellidos, ci, email, telefono, direccion, " +
-                "foto_perfil, estado, password, fecha_nacimiento, fecha_creacion, fecha_modificacion " +
+                "foto, estado, password, fecha_nacimiento, fecha_creacion, fecha_modificacion " +
                 "FROM usuario " +
                 "WHERE id_usuario = ?";
 
@@ -64,7 +64,7 @@ public class UsuarioDAO {
     public List<String[]> listAll() throws SQLException {
         String sql = "SELECT " +
                 "id_usuario, nombre, apellidos, ci, email, telefono, direccion, " +
-                "foto_perfil, estado, password, fecha_nacimiento, fecha_creacion, fecha_modificacion " +
+                "foto, estado, password, fecha_nacimiento, fecha_creacion, fecha_modificacion " +
                 "FROM usuario " +
                 "ORDER BY id_usuario";
 
@@ -91,7 +91,7 @@ public class UsuarioDAO {
                 "telefono = ?, " +
                 "direccion = ?, " +
                 "password = ?, " +
-                "foto_perfil = ?, " +
+                "foto = ?, " +
                 "fecha_nacimiento = ?, " +
                 "estado = ?, " +
                 "fecha_modificacion = CURRENT_TIMESTAMP " +
@@ -178,7 +178,7 @@ public class UsuarioDAO {
                 rs.getString("email") != null ? rs.getString("email") : "",
                 rs.getString("telefono") != null ? rs.getString("telefono") : "",
                 rs.getString("direccion") != null ? rs.getString("direccion") : "",
-                rs.getString("foto_perfil") != null ? rs.getString("foto_perfil") : "",
+                rs.getString("foto") != null ? rs.getString("foto") : "",
                 rs.getString("estado") != null ? rs.getString("estado") : "",
                 rs.getString("password") != null ? rs.getString("password") : "",
                 rs.getDate("fecha_nacimiento") != null ? rs.getDate("fecha_nacimiento").toString() : "",
