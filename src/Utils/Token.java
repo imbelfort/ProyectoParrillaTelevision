@@ -450,8 +450,11 @@ public class Token {
 
     public static boolean isAction(String lexeme) {
         if (lexeme == null || lexeme.trim().isEmpty()) return false;
-        int id = new Token().findByLexeme(lexeme, -1);
-        return 200 <= id && id < 300;
+        Token t = new Token();
+        int id1 = t.findByLexeme(lexeme, -1);
+        if (200 <= id1 && id1 < 300) return true;
+        int id2 = t.findByLexeme(lexeme, CU);
+        return 200 <= id2 && id2 < 300;
     }
 
     public static int getCUId(String lexeme) {
@@ -462,8 +465,11 @@ public class Token {
 
     public static int getActionId(String lexeme) {
         if (lexeme == null) return -1;
-        int id = new Token().findByLexeme(lexeme, -1);
-        return (200 <= id && id < 300) ? id : -1;
+        Token t = new Token();
+        int id1 = t.findByLexeme(lexeme, -1);
+        if (200 <= id1 && id1 < 300) return id1;
+        int id2 = t.findByLexeme(lexeme, CU);
+        return (200 <= id2 && id2 < 300) ? id2 : -1;
     }
 
     public static String sugerirEntidadCercana(String palabra) {
