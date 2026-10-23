@@ -77,31 +77,29 @@ public class SendEmail {
             writer = new DataOutputStream(socket.getOutputStream());
 
             if (socket != null && reader != null && writer != null) {
-                System.out.println("SMTP: " + reader.readLine());
+                logSmtp("S", reader.readLine());
 
                 // Saludar al servidor
                 command = "HELO " + SERVER + "\r\n";
-                writer.writeBytes(command);
-                writer.flush();
-                System.out.println("SMTP: " + reader.readLine());
+                sendSmtpCommand(writer, command);
+                logSmtp("S", reader.readLine());
 
-                command = "MAIL FROM:" + user_emisor + "\r\n";
-                writer.writeBytes(command);
-                writer.flush();
-                System.out.println("SMTP: " + reader.readLine());
+                command = "MAIL FROM:<" + user_emisor + ">\r\n";
+                sendSmtpCommand(writer, command);
+                logSmtp("S", reader.readLine());
 
                 String origen = email.getFrom();
                 if (esEmailValido(origen)) {
                     command = "RCPT TO:<" + origen.trim() + ">\r\n";
-                    writer.writeBytes(command);
-                    writer.flush();
+                    sendSmtpCommand(writer, command);
                     String rcptRes = reader.readLine();
-                    System.out.println("SMTP: " + rcptRes);
+                    logSmtp("S", rcptRes);
                     if (rcptRes == null || !rcptRes.startsWith("250")) {
-                        System.out.println("Correo de respuesta no enviado: destinatario no aceptado por SMTP: " + rcptRes);
+                        logSmtp("!", "Correo de respuesta no enviado: destinatario no aceptado por SMTP: " + rcptRes);
                         try {
-                            writer.writeBytes("QUIT\r\n");
-                            writer.flush();
+                            command = "QUIT\r\n";
+                            sendSmtpCommand(writer, command);
+                            logSmtp("S", reader.readLine());
                         } catch (Exception ignored) {}
                         writer.close();
                         reader.close();
@@ -109,7 +107,7 @@ public class SendEmail {
                         return;
                     }
                 } else {
-                    System.out.println("Correo de respuesta no enviado: remitente invalido (" + origen + ")");
+                    logSmtp("!", "Correo de respuesta no enviado: remitente invalido (" + origen + ")");
                     writer.close();
                     reader.close();
                     socket.close();
@@ -119,9 +117,8 @@ public class SendEmail {
                 // Escribir Mensaje
                 // Comenzar DATA
                 command = "DATA\r\n";
-                writer.writeBytes(command);
-                writer.flush();
-                System.out.println("SMTP: " + reader.readLine());
+                sendSmtpCommand(writer, command);
+                logSmtp("S", reader.readLine());
 
                 // Construir cabeceras minimas validas (From, To, Subject, MIME)
                 StringBuilder data = new StringBuilder();
@@ -193,17 +190,16 @@ public class SendEmail {
                 writer.flush();
                 String dataResponse = reader.readLine();
                 if (dataResponse != null) {
-                    System.out.println("SMTP: " + dataResponse);
+                    logSmtp("S", dataResponse);
                 } else {
-                    System.out.println("Correo de respuesta no enviado: el servidor no respondiÃ³ despuÃ©s del cuerpo");
+                    logSmtp("!", "Correo de respuesta no enviado: el servidor no respondió después del cuerpo");
                 }
 
                 command = "QUIT\r\n";
-                writer.writeBytes(command);
-                writer.flush();
+                sendSmtpCommand(writer, command);
                 String quitResponse = reader.readLine();
                 if (quitResponse != null) {
-                    System.out.println("SMTP: " + quitResponse);
+                    logSmtp("S", quitResponse);
                 }
 
                 System.out.println("Correo de respuesta enviado exitosamente a: " + email.getFrom());
@@ -216,11 +212,23 @@ public class SendEmail {
             socket.close();
         } catch (UnknownHostException e) {
             e.printStackTrace();
-            System.out.println("Correo de respuesta no enviado: no se pudo conectar con el servidor indicado");
+            logSmtp("!", "Correo de respuesta no enviado: no se pudo conectar con el servidor indicado");
         } catch (IOException ex) {
-            System.out.println("Correo de respuesta no enviado: " + ex.getMessage());
+            logSmtp("!", "Correo de respuesta no enviado: " + ex.getMessage());
         } catch (Exception ex) {
-            System.out.println("Correo de respuesta no enviado: " + ex.getMessage());
+            logSmtp("!", "Correo de respuesta no enviado: " + ex.getMessage());
+        }
+    }
+
+    private static void sendSmtpCommand(DataOutputStream writer, String command) throws IOException {
+        System.out.println("[SMTP][C] " + command.replace("\r", "").replace("\n", ""));
+        writer.writeBytes(command);
+        writer.flush();
+    }
+
+    private static void logSmtp(String direction, String message) {
+        if (message != null) {
+            System.out.println("[SMTP][" + direction + "] " + message);
         }
     }
 

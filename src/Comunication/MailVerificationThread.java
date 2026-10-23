@@ -77,6 +77,7 @@ public class MailVerificationThread implements Runnable {
                 output = new DataOutputStream(socket.getOutputStream());
 
                 debug("Conexion POP3 establecida");
+                logProtocol("POP3", "S", "conexion establecida con " + HOST + ":" + PORT_POP);
 
                 notifyStatusIfChanged("POP3", PORT_POP, true, 0);
 
@@ -84,16 +85,20 @@ public class MailVerificationThread implements Runnable {
 
                 int count = getEmailCount();
                 if (count > 0) {
-                    System.out.println("[POP3] Correos entrantes encontrados: " + count + ". Descargando...");
+                    logProtocol("POP3", "S", "STAT -> " + count + " mensaje(s)");
                     emails = getEmails(count);
-                    System.out.println("[POP3] " + emails.size() + " correos descargados. Eliminando del servidor...");
                     deleteEmails(count);
                 }
 
-                output.writeBytes(Command.quit());
-                input.readLine();
+                String quit = Command.quit();
+                sendCommand("POP3", quit);
+                readResponse("POP3");
 
                 cerrarConexionPop3();
+
+                debug("Conexion POP3 cerrada");
+                logProtocol("POP3", "I", "sesion POP3 cerrada normalmente; nuevo sondeo en "
+                        + (LOOP_DELAY_MS / 1000) + " segundos");
 
                 if (count > 0 && emailEventListener != null) {
                     emailEventListener.onReceiveEmailEvent(emails);
@@ -104,13 +109,27 @@ public class MailVerificationThread implements Runnable {
             } catch (IOException ex) {
                 notifyStatusIfChanged("POP3", PORT_POP, false, 0);
                 Logger.getLogger(MailVerificationThread.class.getName()).log(Level.SEVERE, null, ex);
+                logProtocol("POP3", "!", "error de comunicacion: " + ex.getMessage());
+                cerrarConexionPop3();
+                safeSleep(LOOP_DELAY_MS);
+
+            } catch (LinkageError error) {
+                notifyStatusIfChanged("POP3", PORT_POP, false, 0);
+                logProtocol("POP3", "!", "dependencia de ejecucion faltante: " + error.getMessage());
                 cerrarConexionPop3();
                 safeSleep(LOOP_DELAY_MS);
 
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
                 debug("Hilo interrumpido");
+                logProtocol("POP3", "!", "hilo interrumpido");
                 break;
+
+            } catch (Exception ex) {
+                notifyStatusIfChanged("POP3", PORT_POP, false, 0);
+                logProtocol("POP3", "!", "error procesando correo: " + ex.getMessage());
+                cerrarConexionPop3();
+                safeSleep(LOOP_DELAY_MS);
             }
         }
     }
@@ -172,13 +191,13 @@ public class MailVerificationThread implements Runnable {
 
     private void authUser(String email, String password) throws IOException {
         if (socket != null && input != null && output != null) {
-            input.readLine();
+            readResponse("POP3");
 
-            output.writeBytes(Command.user(email));
-            input.readLine();
+            sendCommand("POP3", Command.user(email));
+            readResponse("POP3");
 
-            output.writeBytes(Command.pass(password));
-            String message = input.readLine();
+            sendCommand("POP3", Command.pass(password));
+            String message = readResponse("POP3");
 
             if (message.contains("-ERR")) {
                 throw new AuthenticationException();
@@ -187,9 +206,9 @@ public class MailVerificationThread implements Runnable {
     }
 
     private int getEmailCount() throws IOException {
-        output.writeBytes(Command.stat());
-
-        String line = input.readLine();
+        String command = Command.stat();
+        sendCommand("POP3", command);
+        String line = readResponse("POP3");
         String[] data = line.split(" ");
 
         return Integer.parseInt(data[1]);
@@ -199,12 +218,15 @@ public class MailVerificationThread implements Runnable {
         List<Email> emails = new ArrayList<>();
 
         for (int i = 1; i <= count; i++) {
-            output.writeBytes(Command.retr(i));
-            String status = input.readLine();
+            sendCommand("POP3", Command.retr(i));
+            String status = readResponse("POP3");
 
             if (status != null && status.startsWith("+OK")) {
                 String text = readMultiline();
-                emails.add(Extractor.getEmail(text));
+                Email email = Extractor.getEmail(text);
+                emails.add(email);
+                logProtocol("POP3", "S", "mensaje " + i + " recibido | From: "
+                        + email.getFrom() + " | Subject: " + email.getSubject());
             }
         }
 
@@ -213,8 +235,8 @@ public class MailVerificationThread implements Runnable {
 
     private void deleteEmails(int emails) throws IOException {
         for (int i = 1; i <= emails; i++) {
-            output.writeBytes(Command.dele(i));
-            input.readLine();
+            sendCommand("POP3", Command.dele(i));
+            readResponse("POP3");
         }
     }
 
@@ -284,5 +306,28 @@ public class MailVerificationThread implements Runnable {
         if (DEBUG) {
             System.out.println(mensaje);
         }
+    }
+
+    private void sendCommand(String protocol, String command) throws IOException {
+        String visibleCommand = command.replace("\r", "").replace("\n", "");
+        if (visibleCommand.regionMatches(true, 0, "PASS ", 0, 5)) {
+            visibleCommand = "PASS ********";
+        }
+        logProtocol(protocol, "C", visibleCommand);
+        output.writeBytes(command);
+        output.flush();
+    }
+
+    private String readResponse(String protocol) throws IOException {
+        String response = input.readLine();
+        if (response == null) {
+            throw new IOException(protocol + ": el servidor cerró la conexión sin responder");
+        }
+        logProtocol(protocol, "S", response);
+        return response;
+    }
+
+    private void logProtocol(String protocol, String direction, String message) {
+        System.out.println("[" + protocol + "][" + direction + "] " + message);
     }
 }
