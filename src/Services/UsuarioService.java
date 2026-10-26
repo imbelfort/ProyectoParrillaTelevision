@@ -21,8 +21,9 @@ public class UsuarioService {
 
     public void crearUsuario(List<String> params, String fotoPerfil) throws SQLException {
         if (params.size() < 4) {
-            throw new IllegalArgumentException(
-                    "Faltan parámetros obligatorios. Debe enviar al menos: nombre,email,password,rol  (ejemplo: usuario agregar Carlos,carlos@canal.com,123,Programador)"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Faltan parámetros obligatorios. Debe enviar al menos: nombre,email,password,rol  (ejemplo: usuario agregar Carlos,carlos@canal.com,123,Programador)",
+                    getComandosUsuario()
             );
         }
 
@@ -37,33 +38,33 @@ public class UsuarioService {
         String rol = null;
 
         if (params.size() == 4) {
-            email = params.get(1).trim().toLowerCase();
+            email = params.get(1).trim();
             password = params.get(2).trim();
             rol = params.get(3).trim();
             ci = String.valueOf(System.currentTimeMillis() % 10000000);
         } else if (params.size() == 5) {
             apellidos = params.get(1).trim();
-            email = params.get(2).trim().toLowerCase();
+            email = params.get(2).trim();
             password = params.get(3).trim();
             rol = params.get(4).trim();
             ci = String.valueOf(System.currentTimeMillis() % 10000000);
         } else if (params.size() == 6) {
             apellidos = params.get(1).trim();
-            ci = params.get(2).trim().toUpperCase();
-            email = params.get(3).trim().toLowerCase();
+            ci = params.get(2).trim();
+            email = params.get(3).trim();
             password = params.get(4).trim();
             rol = params.get(5).trim();
         } else if (params.size() == 7) {
             apellidos = params.get(1).trim();
-            ci = params.get(2).trim().toUpperCase();
-            email = params.get(3).trim().toLowerCase();
+            ci = params.get(2).trim();
+            email = params.get(3).trim();
             telefono = params.get(4).trim();
             direccion = params.get(5).trim();
             password = params.get(6).trim();
         } else {
             apellidos = params.get(1).trim();
-            ci = params.get(2).trim().toUpperCase();
-            email = params.get(3).trim().toLowerCase();
+            ci = params.get(2).trim();
+            email = params.get(3).trim();
             telefono = params.get(4).trim();
             direccion = params.get(5).trim();
             fechaNacimiento = parseFechaNacimiento(params.get(6));
@@ -71,9 +72,12 @@ public class UsuarioService {
             if (params.size() > 8) rol = params.get(8).trim();
         }
 
-        if (ci == null || ci.trim().isEmpty()) {
-            ci = String.valueOf(System.currentTimeMillis() % 10000000);
-        }
+        nombre = Utils.Validator.validarTextoSeguro(nombre, "nombre", 2, 50, getComandosUsuario());
+        apellidos = Utils.Validator.validarTextoSeguro(apellidos, "apellidos", 2, 50, getComandosUsuario());
+        email = Utils.Validator.validarEmail(email, getComandosUsuario());
+        telefono = Utils.Validator.validarTelefono(telefono, getComandosUsuario());
+        ci = Utils.Validator.validarDocumento(ci, "ci", getComandosUsuario());
+        direccion = Utils.Validator.sanitizar(direccion);
 
         Usuario usuario = new Usuario();
         usuario.setNombre(nombre);
@@ -83,7 +87,7 @@ public class UsuarioService {
         usuario.setTelefono(telefono);
         usuario.setDireccion(direccion);
         usuario.setFechaNacimiento(fechaNacimiento);
-        usuario.setContrasena(password);
+        usuario.setContrasena(password != null && !password.isEmpty() ? password : "123");
         usuario.setFotoPerfil(fotoPerfil != null && !fotoPerfil.trim().isEmpty() ? fotoPerfil : null);
         usuario.setEstado("ACTIVO");
 
@@ -121,15 +125,18 @@ public class UsuarioService {
 
     public void actualizarUsuario(List<String> params, String fotoPerfil) throws SQLException {
         if (params.size() < 2) {
-            throw new IllegalArgumentException(
-                    "Parametros insuficientes. Formato: usuario modificar id,nombre,apellidos,email,password,rol,estado"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Parámetros insuficientes. Formato: usuario modificar id,nombre,apellidos,email,password,rol,estado",
+                    getComandosUsuario()
             );
         }
 
-        int idUsuario = Integer.parseInt(params.get(0).trim());
+        int idUsuario = Utils.Validator.validarId(params.get(0), "id_usuario", getComandosUsuario());
         String[] actual = usuarioDAO.readById(idUsuario);
         if (actual == null) {
-            throw new SQLException("No existe usuario con ID " + idUsuario);
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_NEG_001,
+                    "No existe usuario con ID " + idUsuario + ".",
+                    "usuario listar");
         }
 
         String nombre = actual[1];
@@ -151,7 +158,7 @@ public class UsuarioService {
             nombre = params.get(1).trim();
             apellidos = params.get(2).trim();
             ci = params.get(3) != null ? params.get(3).trim().toUpperCase() : ci;
-            email = params.get(4) != null ? params.get(4).trim().toLowerCase() : email;
+            email = params.get(4) != null ? params.get(4).trim() : email;
             telefono = params.get(5).trim();
             direccion = params.get(6).trim();
             fechaNacimiento = parseFechaNacimiento(params.get(7));
@@ -160,26 +167,32 @@ public class UsuarioService {
         } else if (params.size() == 7) {
             nombre = params.get(1).trim();
             apellidos = params.get(2).trim();
-            email = params.get(3).trim().toLowerCase();
+            email = params.get(3).trim();
             password = params.get(4).trim();
             rol = params.get(5).trim();
             estado = params.get(6).trim().toUpperCase();
         } else if (params.size() == 6) {
             nombre = params.get(1).trim();
             apellidos = params.get(2).trim();
-            email = params.get(3).trim().toLowerCase();
+            email = params.get(3).trim();
             password = params.get(4).trim();
             estado = params.get(5).trim().toUpperCase();
         } else if (params.size() == 5) {
             nombre = params.get(1).trim();
             apellidos = params.get(2).trim();
-            email = params.get(3).trim().toLowerCase();
+            email = params.get(3).trim();
             estado = params.get(4).trim().toUpperCase();
         } else {
             nombre = params.get(1).trim();
             if (params.size() > 2) apellidos = params.get(2).trim();
-            if (params.size() > 3) email = params.get(3).trim().toLowerCase();
+            if (params.size() > 3) email = params.get(3).trim();
         }
+
+        nombre = Utils.Validator.validarTextoSeguro(nombre, "nombre", 2, 50, getComandosUsuario());
+        apellidos = Utils.Validator.validarTextoSeguro(apellidos, "apellidos", 2, 50, getComandosUsuario());
+        email = Utils.Validator.validarEmail(email, getComandosUsuario());
+        telefono = Utils.Validator.validarTelefono(telefono, getComandosUsuario());
+        estado = Utils.Validator.validarEstado(estado, new String[]{"ACTIVO", "INACTIVO"}, "estado", getComandosUsuario());
 
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(idUsuario);
@@ -221,19 +234,10 @@ public class UsuarioService {
                 "- usuario eliminar id";
     }
 
-    private boolean esEmailValido(String email) {
-        String patron = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
-        return email != null && email.matches(patron);
-    }
-
-    private Date parseFechaNacimiento(String valor) throws SQLException {
+    private Date parseFechaNacimiento(String valor) {
         if (valor == null || valor.trim().isEmpty()) {
             return null;
         }
-        try {
-            return Date.valueOf(valor.trim());
-        } catch (IllegalArgumentException ex) {
-            throw new SQLException("Formato de fecha_nacimiento invalido: " + valor + " (usa yyyy-MM-dd)");
-        }
+        return Utils.Validator.validarFecha(valor, "fecha_nacimiento", getComandosUsuario());
     }
 }

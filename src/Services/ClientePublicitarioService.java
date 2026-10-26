@@ -16,16 +16,23 @@ public class ClientePublicitarioService {
 
     public void crearCliente(List<String> params) throws SQLException {
         if (params.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Formato: cliente agregar razon_social [nit] [contacto] [email] [telefono]"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: cliente agregar razon_social [nit] [contacto] [email] [telefono]",
+                    getComandosCliente()
             );
         }
         ClientePublicitario c = new ClientePublicitario();
-        c.setRazonSocial(params.get(0).trim());
-        c.setNit(params.size() > 1 ? params.get(1).trim() : "1020304050");
-        c.setContacto(params.size() > 2 ? params.get(2).trim() : "Gerente Comercial");
-        c.setEmail(params.size() > 3 ? params.get(3).trim() : "contacto@empresa.com");
-        c.setTelefono(params.size() > 4 ? params.get(4).trim() : "70000000");
+        String razonSocial = Utils.Validator.validarTextoSeguro(params.get(0), "razon_social", 2, 100, getComandosCliente());
+        String nit = params.size() > 1 ? Utils.Validator.validarDocumento(params.get(1), "nit", getComandosCliente()) : "1020304050";
+        String contacto = params.size() > 2 ? Utils.Validator.validarTextoSeguro(params.get(2), "contacto", 2, 50, getComandosCliente()) : "Gerente Comercial";
+        String email = params.size() > 3 ? Utils.Validator.validarEmail(params.get(3), getComandosCliente()) : "contacto@empresa.com";
+        String telefono = params.size() > 4 ? Utils.Validator.validarTelefono(params.get(4), getComandosCliente()) : "70000000";
+
+        c.setRazonSocial(razonSocial);
+        c.setNit(nit);
+        c.setContacto(contacto);
+        c.setEmail(email);
+        c.setTelefono(telefono);
         c.setEstado("ACTIVO");
         dao.create(c);
     }

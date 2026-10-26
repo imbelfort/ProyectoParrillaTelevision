@@ -198,20 +198,20 @@ public class HtmlBuilder {
         }
         sb.append("</div>");
 
-        sb.append("<h2 style='margin: 0 0 14px 0; color: #ffffff; font-size: 20px; font-weight: 800;'>").append(titulo).append("</h2>");
+        sb.append("<h2 style='margin: 0 0 14px 0; color: #ffffff; font-size: 20px; font-weight: 800;'>").append(escapeHtml(titulo)).append("</h2>");
 
         sb.append("<div style='margin-bottom: 14px; padding: 12px 14px; background: #080d1a; border-radius: 8px; border: 1px solid #1e293b; font-family: Consolas, Monaco, monospace; font-size: 13px; color: #fbbf24;'>");
-        sb.append("<span style='color: #94a3b8;'>Comando recibido:</span> <strong>").append(comandoRecibido != null && !comandoRecibido.isEmpty() ? comandoRecibido : "<i>(asunto vacío)</i>").append("</strong>");
+        sb.append("<span style='color: #94a3b8;'>Comando recibido:</span> <strong>").append(comandoRecibido != null && !comandoRecibido.isEmpty() ? escapeHtml(comandoRecibido) : "<i>(asunto vacío)</i>").append("</strong>");
         sb.append("</div>");
 
         sb.append("<div style='background: #1e131d; border: 1px solid #7f1d1d; border-radius: 8px; padding: 14px; margin-bottom: 14px;'>");
-        sb.append("<p style='color: #fca5a5; font-size: 14px; line-height: 1.5; margin: 0;'><strong>⚠️ Detalle del Error:</strong> ").append(queFallo).append("</p>");
+        sb.append("<p style='color: #fca5a5; font-size: 14px; line-height: 1.5; margin: 0;'><strong>⚠️ Detalle del Error:</strong> ").append(escapeHtml(queFallo)).append("</p>");
         sb.append("</div>");
 
         if (sugerencia != null && !sugerencia.trim().isEmpty()) {
             sb.append("<div style='padding: 14px; background: #0c1b33; border-radius: 8px; border-left: 4px solid #38bdf8; color: #e0f2fe; font-size: 13px; line-height: 1.6;'>");
             sb.append("<strong style='color: #38bdf8;'>💡 Formato correcto esperado:</strong><br>");
-            sb.append("<pre style='margin: 8px 0 0 0; font-family: Consolas, Monaco, monospace; font-size: 12px; color: #bae6fd; white-space: pre-wrap;'>").append(sugerencia).append("</pre>");
+            sb.append("<pre style='margin: 8px 0 0 0; font-family: Consolas, Monaco, monospace; font-size: 12px; color: #bae6fd; white-space: pre-wrap;'>").append(escapeHtml(sugerencia)).append("</pre>");
             sb.append("</div>");
         }
 
@@ -240,22 +240,33 @@ public class HtmlBuilder {
         return sb.toString();
     }
 
+    public static String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&#39;");
+    }
+
     private static String formatearCelda(String valor) {
-        if ("ACTIVO".equalsIgnoreCase(valor) || "APROBADA".equalsIgnoreCase(valor) || "APROBADO_AIRE".equalsIgnoreCase(valor) || "EMITIDO_CORRECTO".equalsIgnoreCase(valor) || "LISTO".equalsIgnoreCase(valor)) {
-            return "<span style='background: #059669; color: #ffffff; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700;'>✔ " + valor + "</span>";
+        if (valor == null) return "";
+        String v = valor.trim();
+        if ("ACTIVO".equalsIgnoreCase(v) || "APROBADA".equalsIgnoreCase(v) || "APROBADO_AIRE".equalsIgnoreCase(v) || "EMITIDO_CORRECTO".equalsIgnoreCase(v) || "LISTO".equalsIgnoreCase(v)) {
+            return "<span style='background: #059669; color: #ffffff; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700;'>✔ " + escapeHtml(v) + "</span>";
         }
-        if ("BORRADOR".equalsIgnoreCase(valor) || "PENDIENTE".equalsIgnoreCase(valor) || "PROGRAMADO".equalsIgnoreCase(valor) || "PAUTADO".equalsIgnoreCase(valor) || "INGESTADO".equalsIgnoreCase(valor)) {
-            return "<span style='background: #d97706; color: #ffffff; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700;'>⏳ " + valor + "</span>";
+        if ("BORRADOR".equalsIgnoreCase(v) || "PENDIENTE".equalsIgnoreCase(v) || "PROGRAMADO".equalsIgnoreCase(v) || "PAUTADO".equalsIgnoreCase(v) || "INGESTADO".equalsIgnoreCase(v)) {
+            return "<span style='background: #d97706; color: #ffffff; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700;'>⏳ " + escapeHtml(v) + "</span>";
         }
-        if ("CANCELADO".equalsIgnoreCase(valor) || "INACTIVO".equalsIgnoreCase(valor) || "FALLA_TECNICA".equalsIgnoreCase(valor) || "CORTE_ENERGIA".equalsIgnoreCase(valor) || valor.startsWith("RECHAZADO")) {
-            return "<span style='background: #b91c1c; color: #ffffff; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700;'>✖ " + valor + "</span>";
+        if ("CANCELADO".equalsIgnoreCase(v) || "INACTIVO".equalsIgnoreCase(v) || "FALLA_TECNICA".equalsIgnoreCase(v) || "CORTE_ENERGIA".equalsIgnoreCase(v) || v.startsWith("RECHAZADO")) {
+            return "<span style='background: #b91c1c; color: #ffffff; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700;'>✖ " + escapeHtml(v) + "</span>";
         }
-        if ("VIVO".equalsIgnoreCase(valor) || "[EN VIVO]".equalsIgnoreCase(valor)) {
+        if ("VIVO".equalsIgnoreCase(v) || "[EN VIVO]".equalsIgnoreCase(v)) {
             return "<span style='background: #dc2626; color: #ffffff; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;'>🔴 EN VIVO</span>";
         }
-        if (valor.startsWith("CORTE_")) {
-            return "<span style='background: #3730a3; color: #e0e7ff; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;'>🎬 " + valor + "</span>";
+        if (v.startsWith("CORTE_")) {
+            return "<span style='background: #3730a3; color: #e0e7ff; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;'>🎬 " + escapeHtml(v) + "</span>";
         }
-        return valor;
+        return escapeHtml(v);
     }
 }

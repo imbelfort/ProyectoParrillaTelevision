@@ -17,27 +17,31 @@ public class EmisionRealLogService {
 
     public void conciliarEmision(List<String> params) throws SQLException {
         if (params.isEmpty()) {
-            throw new IllegalArgumentException("Uso: emision conciliar id_item_parrilla [operador] [observaciones]");
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Uso: emision conciliar id_item_parrilla [operador] [observaciones]",
+                    getComandosEmision()
+            );
         }
-        int idItem = Integer.parseInt(params.get(0).trim());
-        String operador = params.size() > 1 ? params.get(1).trim() : "master_control";
-        String obs = params.size() > 2 ? params.get(2).trim() : "Conciliado con parrilla oficial";
+        int idItem = Utils.Validator.validarId(params.get(0), "id_item_parrilla", getComandosEmision());
+        String operador = params.size() > 1 ? Utils.Validator.validarTextoSeguro(params.get(1), "operador", 2, 50, getComandosEmision()) : "master_control";
+        String obs = params.size() > 2 ? Utils.Validator.sanitizar(params.get(2)) : "Conciliado con parrilla oficial";
         dao.conciliarItem(idItem, operador, "EMITIDO_CORRECTO", 0, obs);
     }
 
     public void registrarEmisionReal(List<String> params) throws SQLException {
         if (params.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Formato: emision registrar id_item [estado] [discrepancia_segundos] [operador]"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: emision registrar id_item [estado] [discrepancia_segundos] [operador]",
+                    getComandosEmision()
             );
         }
 
-        int idItem = Integer.parseInt(params.get(0).trim());
+        int idItem = Utils.Validator.validarId(params.get(0), "id_item", getComandosEmision());
 
         if (params.size() <= 4) {
-            String estado = params.size() > 1 ? params.get(1).trim().toUpperCase() : "EMITIDO_CORRECTO";
+            String estado = params.size() > 1 ? Utils.Validator.validarEstado(params.get(1), new String[]{"EMITIDO_CORRECTO", "DESPLAZADO", "FALLA_TECNICA", "CORTE_ENERGIA", "OMITIDO"}, "estado_emision", getComandosEmision()) : "EMITIDO_CORRECTO";
             int discrepancia = params.size() > 2 ? Integer.parseInt(params.get(2).trim()) : 0;
-            String operador = params.size() > 3 ? params.get(3).trim() : "master_control";
+            String operador = params.size() > 3 ? Utils.Validator.validarTextoSeguro(params.get(3), "operador", 2, 50, getComandosEmision()) : "master_control";
             dao.conciliarItem(idItem, operador, estado, discrepancia, "Registro de emision");
             return;
         }

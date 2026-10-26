@@ -110,16 +110,14 @@ public class Analex {
     private void dt(){
         int status = 0;
         int index = -1;
-        System.out.println("DEBUG Analex.dt() iniciando...");
         while(true){
             char c = cinta.CC();
-            System.out.println("DEBUG dt() - status=" + status + ", char=[" + c + "] (ASCII " + (int)c + "), ac=[" + ac + "]");
             switch(status){
                 case 0:
                     if(isSpace(c)){
                         cinta.forward();
                         status = 0;
-                    }else if(isLetter(c) || isDigit(c)){
+                    }else if(isLetter(c) || isDigit(c) || ((afterAction || tsp.length() > 0) && (c == '-' || c == '+' || c == '.' || c == '/' || c == '"' || c == '\'' || c == '('))){
                         // Check if we're after ACTION or already collecting parameters
                         if(afterAction || tsp.length() > 0) {
                             // After ACTION, or already have params, enter parameter mode
@@ -165,7 +163,6 @@ public class Analex {
                     break;
 
                 case 2:
-                    System.out.println("DEBUG dt() - Estado 2: Retornando token con ac=[" + ac + "]");
                     R = new Token(ac, lastTokenType);
                     lastTokenType = R.getName(); // Track token type for syntax flow
                     // If this is an ACTION token, next letters should be parameters
@@ -186,6 +183,10 @@ public class Analex {
                         ac = ac + c;
                         cinta.forward();
                         status = 34;
+                    }else if(c == '-' || c == '+' || c == '.' || c == '/' || c == '"' || c == '\'' || c == '('){
+                        ac = ac + c;
+                        cinta.forward();
+                        status = 3;
                     }else if(isEndParams(c)){
                         status = 5;
                     }else{
@@ -214,7 +215,7 @@ public class Analex {
                     break;
 
                 case 3:
-                    if(isLetter(c) || isDigit(c) || isDate(c) || isEmail(c)){
+                    if(isLetter(c) || isDigit(c) || isDate(c) || isEmail(c) || c == '/' || c == '+' || c == '(' || c == ')' || c == '"' || c == '\''){
                         ac = ac + c;
                         cinta.forward();
                         status = 3;

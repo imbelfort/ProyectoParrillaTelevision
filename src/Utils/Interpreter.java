@@ -121,6 +121,20 @@ public class Interpreter implements Runnable {
     public void run() {
         String cleanCommand = stripAttachmentMarkers(command);
 
+        // 0. Detección temprana de caracteres de control o no imprimibles peligrosos
+        for (int i = 0; i < cleanCommand.length(); i++) {
+            char ch = cleanCommand.charAt(i);
+            if ((ch < 32 && ch != '\t' && ch != '\n' && ch != '\r') || ch == 127) {
+                TokenEvent errorEvent = new TokenEvent(this, sender);
+                errorEvent.setErrorCode(ErrorCode.ERR_CMD_004);
+                errorEvent.setAction(Token.ERROR_COMMAND);
+                errorEvent.addParams("El comando contiene un carácter de control no permitido (ASCII: " + (int) ch + ").");
+                errorEvent.setSuggestion("Utilice solo caracteres alfanuméricos y texto estándar.");
+                listener.error(errorEvent);
+                return;
+            }
+        }
+
         // 1. Comando vacío
         if (cleanCommand.isEmpty()) {
             TokenEvent errorEvent = new TokenEvent(this, sender);
@@ -141,45 +155,8 @@ public class Interpreter implements Runnable {
         if ("help".equalsIgnoreCase(firstWord) || "ayuda".equalsIgnoreCase(firstWord)) {
             // Se procesará en Home directamente o pasa
         }
-        // 2. Comprobar si empezó con un parámetro numérico / ID (ERR-ORD-002)
-        else if (firstWord.matches("^\\d+$")) {
-            TokenEvent errorEvent = new TokenEvent(this, sender);
-            errorEvent.setErrorCode(ErrorCode.ERR_ORD_002);
-            errorEvent.setAction(Token.ERROR_COMMAND);
-            String entidad = (secondWord != null && Token.isCU(secondWord)) ? secondWord : "entidad";
-            String accion = words.length > 2 ? words[2] : "consultar";
-            errorEvent.addParams("Se detectó un parámetro numérico ('" + firstWord + "') antes del nombre de la entidad o acción.");
-            errorEvent.setSuggestion(entidad + " " + accion + " " + firstWord);
-            listener.error(errorEvent);
-            return;
-        }
-        // 3. Comprobar si empezó con una ACCIÓN antes de una ENTIDAD (ERR-ORD-001)
-        else if (Token.isAction(firstWord)) {
-            if (secondWord != null && Token.isCU(secondWord)) {
-                TokenEvent errorEvent = new TokenEvent(this, sender);
-                errorEvent.setErrorCode(ErrorCode.ERR_ORD_001);
-                errorEvent.setAction(Token.ERROR_COMMAND);
-                StringBuilder sugerencia = new StringBuilder();
-                sugerencia.append(secondWord).append(" ").append(firstWord);
-                for (int i = 2; i < words.length; i++) {
-                    sugerencia.append(" ").append(words[i]);
-                }
-                errorEvent.addParams("Orden sintáctico invertido: Se escribió la acción '" + firstWord + "' antes de la entidad '" + secondWord + "'.");
-                errorEvent.setSuggestion(sugerencia.toString().trim());
-                listener.error(errorEvent);
-                return;
-            } else if (secondWord == null) {
-                TokenEvent errorEvent = new TokenEvent(this, sender);
-                errorEvent.setErrorCode(ErrorCode.ERR_INC_001);
-                errorEvent.setAction(Token.ERROR_COMMAND);
-                errorEvent.addParams("Orden incompleta: Se especificó la acción '" + firstWord + "' pero falta indicar sobre qué entidad aplicarla.");
-                errorEvent.setSuggestion("usuario " + firstWord + "  (o consulte 'help' para ver entidades disponibles)");
-                listener.error(errorEvent);
-                return;
-            }
-        }
-        // 4. Comprobar si la primera palabra es una ENTIDAD conocida
-        else if (Token.isCU(firstWord)) {
+        // 2. Comprobar si la primera palabra es una ENTIDAD conocida (CU1 a CU8)
+        if (Token.isCU(firstWord)) {
             // Caso de Orden Incompleta: Solo se escribió la entidad sin acción (ERR-INC-001)
             if (words.length == 1) {
                 TokenEvent errorEvent = new TokenEvent(this, sender);
@@ -215,6 +192,51 @@ public class Interpreter implements Runnable {
                 }
                 errorEvent.addParams(msg);
                 errorEvent.setSuggestion(sugerirAccionesParaEntidad(firstWord));
+                listener.error(errorEvent);
+                return;
+            }
+        }
+        // 3. Comprobar si empezó con un parámetro numérico / ID (ERR-ORD-002)
+        else if (firstWord.matches("^\\d+$")) {
+            TokenEvent errorEvent = new TokenEvent(this, sender);
+            errorEvent.setErrorCode(ErrorCode.ERR_ORD_002);
+            errorEvent.setAction(Token.ERROR_COMMAND);
+            String entidad = (secondWord != null && Token.isCU(secondWord)) ? secondWord : "entidad";
+            String accion = words.length > 2 ? words[2] : "consultar";
+            errorEvent.addParams("Se detectó un parámetro numérico ('" + firstWord + "') antes del nombre de la entidad o acción.");
+            errorEvent.setSuggestion(entidad + " " + accion + " " + firstWord);
+            listener.error(errorEvent);
+            return;
+        }
+        // 4. Comprobar si empezó con una ACCIÓN antes de una ENTIDAD (ERR-ORD-001)
+        else if (Token.isAction(firstWord)) {
+            if (secondWord != null && Token.isCU(secondWord)) {
+                TokenEvent errorEvent = new TokenEvent(this, sender);
+                errorEvent.setErrorCode(ErrorCode.ERR_ORD_001);
+                errorEvent.setAction(Token.ERROR_COMMAND);
+                StringBuilder sugerencia = new StringBuilder();
+                sugerencia.append(secondWord).append(" ").append(firstWord);
+                for (int i = 2; i < words.length; i++) {
+                    sugerencia.append(" ").append(words[i]);
+                }
+                errorEvent.addParams("Orden sintáctico invertido: Se escribió la acción '" + firstWord + "' antes de la entidad '" + secondWord + "'.");
+                errorEvent.setSuggestion(sugerencia.toString().trim());
+                listener.error(errorEvent);
+                return;
+            } else if (secondWord == null) {
+                TokenEvent errorEvent = new TokenEvent(this, sender);
+                errorEvent.setErrorCode(ErrorCode.ERR_INC_001);
+                errorEvent.setAction(Token.ERROR_COMMAND);
+                errorEvent.addParams("Orden incompleta: Se especificó la acción '" + firstWord + "' pero falta indicar sobre qué entidad aplicarla.");
+                errorEvent.setSuggestion("usuario " + firstWord + "  (o consulte 'help' para ver entidades disponibles)");
+                listener.error(errorEvent);
+                return;
+            } else {
+                TokenEvent errorEvent = new TokenEvent(this, sender);
+                errorEvent.setErrorCode(ErrorCode.ERR_ORD_001);
+                errorEvent.setAction(Token.ERROR_COMMAND);
+                errorEvent.addParams("Orden sintáctico incorrecto: Se inició con la acción '" + firstWord + "' pero '" + secondWord + "' no es una entidad reconocida.");
+                errorEvent.setSuggestion("usuario " + firstWord);
                 listener.error(errorEvent);
                 return;
             }
@@ -310,8 +332,10 @@ public class Interpreter implements Runnable {
             return "";
         }
 
-        return input.replaceAll("\\[[^\\]]*\\]", " ")
-                .replaceAll("\\s+", " ")
-                .trim();
+        // Remueve marcadores explícitos de adjuntos (ej: [ATTACHMENT], [ADJUNTO], [FOTO])
+        String s = input.replaceAll("(?i)\\[(attachment|adjunto|foto|file|archivo)\\]", " ");
+        // Si el usuario ingresó parámetros entre corchetes o paréntesis [p1, p2], se eliminan solo los delimitadores
+        s = s.replaceAll("[\\[\\]]", " ");
+        return s.replaceAll("\\s+", " ").trim();
     }
 }

@@ -17,34 +17,52 @@ public class ItemParrillaService {
 
     public void crearItemParrilla(List<String> params) throws SQLException {
         if (params.size() < 4) {
-            throw new IllegalArgumentException(
-                    "Formato: item agregar id_parrilla,id_programa,hora_inicio,hora_fin [tipo_emision]"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: item agregar id_parrilla,id_programa,hora_inicio,hora_fin [tipo_emision]",
+                    getComandosItemParrilla()
             );
         }
         ItemParrilla item = new ItemParrilla();
-        item.setIdParrilla(Integer.parseInt(params.get(0).trim()));
-        item.setIdPrograma(Integer.parseInt(params.get(1).trim()));
-        item.setHoraInicio(parseTime(params.get(2).trim()));
-        item.setHoraFin(parseTime(params.get(3).trim()));
-        item.setTipoEmision(params.size() > 4 ? params.get(4).trim().toUpperCase() : "GRABADO");
+        int idParrilla = Utils.Validator.validarId(params.get(0), "id_parrilla", getComandosItemParrilla());
+        int idPrograma = Utils.Validator.validarId(params.get(1), "id_programa", getComandosItemParrilla());
+        Time inicio = Utils.Validator.validarHora(params.get(2), "hora_inicio", getComandosItemParrilla());
+        Time fin = Utils.Validator.validarHora(params.get(3), "hora_fin", getComandosItemParrilla());
+        Utils.Validator.validarHorarioBloque(inicio, fin, getComandosItemParrilla());
+
+        String tipo = params.size() > 4 ? Utils.Validator.validarEstado(params.get(4), new String[]{"VIVO", "GRABADO", "REPETICION"}, "tipo_emision", getComandosItemParrilla()) : "GRABADO";
+
+        item.setIdParrilla(idParrilla);
+        item.setIdPrograma(idPrograma);
+        item.setHoraInicio(inicio);
+        item.setHoraFin(fin);
+        item.setTipoEmision(tipo);
         item.setEstado("PROGRAMADO");
-        item.setObservaciones(params.size() > 5 ? params.get(5).trim() : null);
+        item.setObservaciones(params.size() > 5 ? Utils.Validator.sanitizar(params.get(5)) : null);
         dao.create(item);
     }
 
     public void modificarItemParrilla(List<String> params) throws SQLException {
         if (params.size() < 3) {
-            throw new IllegalArgumentException(
-                    "Formato: item modificar id_item,hora_inicio,hora_fin [tipo_emision] [estado] [observaciones]"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: item modificar id_item,hora_inicio,hora_fin [tipo_emision] [estado] [observaciones]",
+                    getComandosItemParrilla()
             );
         }
         ItemParrilla item = new ItemParrilla();
-        item.setId(Integer.parseInt(params.get(0).trim()));
-        item.setHoraInicio(parseTime(params.get(1).trim()));
-        item.setHoraFin(parseTime(params.get(2).trim()));
-        item.setTipoEmision(params.size() > 3 ? params.get(3).trim().toUpperCase() : "GRABADO");
-        item.setEstado(params.size() > 4 ? params.get(4).trim().toUpperCase() : "PROGRAMADO");
-        item.setObservaciones(params.size() > 5 ? params.get(5).trim() : null);
+        int id = Utils.Validator.validarId(params.get(0), "id_item", getComandosItemParrilla());
+        Time inicio = Utils.Validator.validarHora(params.get(1), "hora_inicio", getComandosItemParrilla());
+        Time fin = Utils.Validator.validarHora(params.get(2), "hora_fin", getComandosItemParrilla());
+        Utils.Validator.validarHorarioBloque(inicio, fin, getComandosItemParrilla());
+
+        String tipo = params.size() > 3 ? Utils.Validator.validarEstado(params.get(3), new String[]{"VIVO", "GRABADO", "REPETICION"}, "tipo_emision", getComandosItemParrilla()) : "GRABADO";
+        String estado = params.size() > 4 ? Utils.Validator.validarEstado(params.get(4), new String[]{"PROGRAMADO", "AL_AIRE", "EMITIDO", "CANCELADO"}, "estado", getComandosItemParrilla()) : "PROGRAMADO";
+
+        item.setId(id);
+        item.setHoraInicio(inicio);
+        item.setHoraFin(fin);
+        item.setTipoEmision(tipo);
+        item.setEstado(estado);
+        item.setObservaciones(params.size() > 5 ? Utils.Validator.sanitizar(params.get(5)) : null);
         dao.update(item);
     }
 

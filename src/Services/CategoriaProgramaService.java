@@ -16,11 +16,16 @@ public class CategoriaProgramaService {
 
     public void crearCategoria(List<String> params) throws SQLException {
         if (params.size() < 2) {
-            throw new IllegalArgumentException("Formato: categoria agregar nombre,descripcion");
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: categoria agregar nombre,descripcion",
+                    getComandosCategoria()
+            );
         }
         CategoriaPrograma c = new CategoriaPrograma();
-        c.setNombre(params.get(0).trim().toUpperCase());
-        c.setDescripcion(params.get(1).trim());
+        String nombre = Utils.Validator.validarTextoSeguro(params.get(0), "nombre_categoria", 2, 50, getComandosCategoria()).toUpperCase();
+        String desc = Utils.Validator.sanitizar(params.get(1));
+        c.setNombre(nombre);
+        c.setDescripcion(desc);
         c.setEstado("ACTIVO");
         dao.create(c);
     }

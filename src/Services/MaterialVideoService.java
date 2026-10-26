@@ -16,32 +16,41 @@ public class MaterialVideoService {
 
     public void crearMaterial(List<String> params) throws SQLException {
         if (params.size() < 4) {
-            throw new IllegalArgumentException(
-                    "Formato: material agregar id_programa,codigo,titulo,duracion_segundos"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: material agregar id_programa,codigo,titulo,duracion_segundos",
+                    getComandosMaterial()
             );
         }
         MaterialVideo m = new MaterialVideo();
-        m.setIdPrograma(Integer.parseInt(params.get(0).trim()));
-        String codigo = params.get(1).trim().toUpperCase();
-        m.setCodigoMaterial(codigo);
-        m.setTituloClip(params.get(2).trim());
-        m.setDuracionSegundos(Integer.parseInt(params.get(3).trim()));
+        int idProg = Utils.Validator.validarId(params.get(0), "id_programa", getComandosMaterial());
+        String codigo = Utils.Validator.validarCodigo(params.get(1), "codigo_material", getComandosMaterial());
+        String titulo = Utils.Validator.validarTextoSeguro(params.get(2), "titulo_clip", 2, 100, getComandosMaterial());
+        int duracion = Utils.Validator.validarDuracion(params.get(3), "duracion_segundos", getComandosMaterial());
 
-        m.setFormato(params.size() > 4 ? params.get(4).trim().toUpperCase() : "HD_1080I");
-        m.setResolucion(params.size() > 5 ? params.get(5).trim() : "1920x1080");
-        m.setRutaServidor(params.size() > 6 ? params.get(6).trim() : "/mam/storage/" + codigo.toLowerCase() + ".mp4");
-        m.setIdResponsable(params.size() > 7 ? Integer.parseInt(params.get(7).trim()) : 3);
+        m.setIdPrograma(idProg);
+        m.setCodigoMaterial(codigo);
+        m.setTituloClip(titulo);
+        m.setDuracionSegundos(duracion);
+
+        String formato = params.size() > 4 ? Utils.Validator.validarEstado(params.get(4), new String[]{"HD_1080I", "HD_720P", "4K_UHD", "SD_480I"}, "formato", getComandosMaterial()) : "HD_1080I";
+        m.setFormato(formato);
+        m.setResolucion(params.size() > 5 ? Utils.Validator.sanitizar(params.get(5)) : "1920x1080");
+        m.setRutaServidor(params.size() > 6 ? Utils.Validator.sanitizar(params.get(6)) : "/mam/storage/" + codigo.toLowerCase() + ".mp4");
+        m.setIdResponsable(params.size() > 7 ? Utils.Validator.validarId(params.get(7), "id_responsable", getComandosMaterial()) : 3);
         m.setEstado("LISTO");
-        m.setObservaciones(params.size() > 8 ? params.get(8).trim() : "Material ingestado y listo para broadcast");
+        m.setObservaciones(params.size() > 8 ? Utils.Validator.sanitizar(params.get(8)) : "Material ingestado y listo para broadcast");
         dao.create(m);
     }
 
     public void actualizarEstado(List<String> params) throws SQLException {
         if (params.size() < 2) {
-            throw new IllegalArgumentException("Formato: material_video actualizar_estado id,estado(INGESTADO|TRANSCODIFICADO|LISTO|CUARENTENA|DESCARTADO)");
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: material_video actualizar_estado id,estado(INGESTADO|TRANSCODIFICADO|LISTO|CUARENTENA|DESCARTADO)",
+                    getComandosMaterial()
+            );
         }
-        int id = Integer.parseInt(params.get(0).trim());
-        String estado = params.get(1).trim().toUpperCase();
+        int id = Utils.Validator.validarId(params.get(0), "id_material", getComandosMaterial());
+        String estado = Utils.Validator.validarEstado(params.get(1), new String[]{"INGESTADO", "TRANSCODIFICADO", "LISTO", "CUARENTENA", "DESCARTADO"}, "estado", getComandosMaterial());
         dao.updateEstado(id, estado);
     }
 

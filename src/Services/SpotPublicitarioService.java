@@ -17,19 +17,27 @@ public class SpotPublicitarioService {
 
     public void crearSpot(List<String> params) throws SQLException {
         if (params.size() < 3) {
-            throw new IllegalArgumentException(
-                    "Formato: spot agregar id_cliente,codigo_spot,titulo_spot [duracion_segundos]"
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: spot agregar id_cliente,codigo_spot,titulo_spot [duracion_segundos]",
+                    getComandosSpot()
             );
         }
         SpotPublicitario s = new SpotPublicitario();
-        s.setIdCliente(Integer.parseInt(params.get(0).trim()));
-        s.setCodigoSpot(params.get(1).trim().toUpperCase());
-        s.setTituloSpot(params.get(2).trim());
-        s.setDuracionSegundos(params.size() > 3 ? Integer.parseInt(params.get(3).trim()) : 30);
+        int idCliente = Utils.Validator.validarId(params.get(0), "id_cliente", getComandosSpot());
+        String codigoSpot = Utils.Validator.validarCodigo(params.get(1), "codigo_spot", getComandosSpot());
+        String tituloSpot = Utils.Validator.validarTextoSeguro(params.get(2), "titulo_spot", 2, 100, getComandosSpot());
+        int duracion = params.size() > 3 ? Utils.Validator.validarDuracion(params.get(3), "duracion_segundos", getComandosSpot()) : 30;
 
         long hoy = System.currentTimeMillis();
-        s.setFechaVigenciaInicio(params.size() > 4 ? Date.valueOf(params.get(4).trim()) : new Date(hoy));
-        s.setFechaVigenciaFin(params.size() > 5 ? Date.valueOf(params.get(5).trim()) : new Date(hoy + 365L * 24 * 3600 * 1000));
+        Date inicio = params.size() > 4 ? Utils.Validator.validarFecha(params.get(4), "fecha_vigencia_inicio", getComandosSpot()) : new Date(hoy);
+        Date fin = params.size() > 5 ? Utils.Validator.validarFecha(params.get(5), "fecha_vigencia_fin", getComandosSpot()) : new Date(hoy + 365L * 24 * 3600 * 1000);
+
+        s.setIdCliente(idCliente);
+        s.setCodigoSpot(codigoSpot);
+        s.setTituloSpot(tituloSpot);
+        s.setDuracionSegundos(duracion);
+        s.setFechaVigenciaInicio(inicio);
+        s.setFechaVigenciaFin(fin);
         s.setEstado("ACTIVO");
         dao.create(s);
     }

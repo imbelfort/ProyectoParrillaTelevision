@@ -829,10 +829,12 @@ public class Home {
             return;
         }
         if (e instanceof NumberFormatException) {
-            String msg = e.getMessage() != null ? e.getMessage() : "";
-            enviarErrorDetallado(email, respuesta, ErrorCode.ERR_FMT_001, "Formato Numérico Inválido",
-                    "Se esperaba un número entero (ID numérico o cantidad), pero se ingresó un valor no numérico: " + msg,
-                    fallbackHelp);
+            String raw = e.getMessage() != null ? e.getMessage() : "";
+            String valor = raw.replace("For input string: ", "").replace("\"", "").trim();
+            String detalle = valor.isEmpty()
+                    ? "Se esperaba un número entero positivo para el identificador (ID) o cantidad, pero no se ingresó un valor numérico válido."
+                    : "El valor '" + valor + "' no es un número entero válido. Ingrese un número entero positivo (ejemplo: 1, 2, 3).";
+            enviarErrorDetallado(email, respuesta, ErrorCode.ERR_FMT_001, "Formato Numérico Inválido", detalle, fallbackHelp);
             return;
         }
         if (e instanceof IllegalArgumentException) {

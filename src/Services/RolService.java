@@ -16,11 +16,16 @@ public class RolService {
 
     public void crearRol(List<String> params) throws SQLException {
         if (params.size() < 2) {
-            throw new IllegalArgumentException("Formato: rol agregar nombre,descripcion");
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: rol agregar nombre,descripcion",
+                    getComandosRol()
+            );
         }
         Rol r = new Rol();
-        r.setNombre(params.get(0).trim().toUpperCase());
-        r.setDescripcion(params.get(1).trim());
+        String nombre = Utils.Validator.validarTextoSeguro(params.get(0), "nombre_rol", 2, 50, getComandosRol()).toUpperCase();
+        String desc = Utils.Validator.sanitizar(params.get(1));
+        r.setNombre(nombre);
+        r.setDescripcion(desc);
         r.setEstado("ACTIVO");
         rolDAO.create(r);
     }
@@ -31,10 +36,13 @@ public class RolService {
 
     public void asignarRol(List<String> params) throws SQLException {
         if (params.size() < 2) {
-            throw new IllegalArgumentException("Formato: rol asignar id_usuario,id_rol");
+            throw new Utils.CommandException(Utils.ErrorCode.ERR_INC_002,
+                    "Formato: rol asignar id_usuario,id_rol",
+                    getComandosRol()
+            );
         }
-        int idUsuario = Integer.parseInt(params.get(0).trim());
-        int idRol = Integer.parseInt(params.get(1).trim());
+        int idUsuario = Utils.Validator.validarId(params.get(0), "id_usuario", getComandosRol());
+        int idRol = Utils.Validator.validarId(params.get(1), "id_rol", getComandosRol());
         rolDAO.asignarRolUsuario(idUsuario, idRol);
     }
 
