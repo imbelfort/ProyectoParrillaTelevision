@@ -1,0 +1,76 @@
+@startuml
+title CU2 - Gestion del Catalogo de Programas
+
+actor "Administrador / programador" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "ProgramaService" as ProgramaService
+participant "ProgramaDAO" as ProgramaDAO
+participant "CategoriaProgramaService" as CategoriaService
+participant "CategoriaProgramaDAO" as CategoriaDAO
+participant "PostgreSQL" as BD
+participant "AuditoriaSistemaService" as Auditoria
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando programa o categoria
+Entrada -> Home : Entrega comando
+Home -> Home : Interpreta accion y parametros
+
+alt Gestion de categorias
+    Home -> CategoriaService : Ejecuta listar o agregar
+    alt Listar categorias
+        CategoriaService -> CategoriaDAO : listAll()
+        CategoriaDAO -> BD : SELECT categorias
+        BD --> CategoriaDAO : Registros
+        CategoriaDAO --> CategoriaService : Lista de categorias
+        CategoriaService --> Home : Lista de categorias
+    else Agregar categoria
+        CategoriaService -> CategoriaService : Valida y normaliza datos
+        CategoriaService -> CategoriaDAO : create(categoria)
+        CategoriaDAO -> BD : INSERT categoria
+        BD --> CategoriaDAO : Resultado
+        CategoriaService -> CategoriaDAO : listAll()
+        CategoriaDAO -> BD : SELECT categorias
+        BD --> CategoriaDAO : Registros actualizados
+        CategoriaDAO --> CategoriaService : Lista de categorias
+        CategoriaService --> Home : Lista actualizada
+    end
+else Gestion de programas
+    Home -> ProgramaService : Ejecuta accion de catalogo
+    alt Listar programas
+        ProgramaService -> ProgramaDAO : listAll()
+        ProgramaDAO -> BD : SELECT programas y categorias
+        BD --> ProgramaDAO : Registros
+        ProgramaDAO --> ProgramaService : Lista de programas
+        ProgramaService --> Home : Lista de programas
+    else Consultar programa
+        ProgramaService -> ProgramaDAO : readById(id)
+        ProgramaDAO -> BD : SELECT programa por ID
+        BD --> ProgramaDAO : Datos o sin resultado
+        ProgramaDAO --> ProgramaService : Programa o null
+        ProgramaService --> Home : Datos o programa no encontrado
+    else Agregar, modificar o eliminar
+        ProgramaService -> ProgramaService : Valida y normaliza datos
+        ProgramaService -> ProgramaDAO : create, update o delete
+        ProgramaDAO -> BD : INSERT, UPDATE o DELETE programa
+        BD --> ProgramaDAO : Resultado
+        ProgramaDAO --> ProgramaService : Resultado
+        ProgramaService --> Home : Resultado de la operacion
+        Home -> Auditoria : Registra INSERT, UPDATE o DELETE
+        Auditoria -> BD : INSERT auditoria
+        BD --> Auditoria : Resultado
+        Home -> ProgramaService : listarProgramas()
+        ProgramaService -> ProgramaDAO : listAll()
+        ProgramaDAO -> BD : SELECT programas y categorias
+        BD --> ProgramaDAO : Registros actualizados
+        ProgramaDAO --> ProgramaService : Lista de programas
+        ProgramaService --> Home : Lista actualizada
+    end
+end
+
+Home -> Home : Genera tabla, confirmacion o error
+Home -> Correo : Envia respuesta al remitente si aplica
+Correo --> Usuario : Respuesta por correo
+Home --> Entrada : Muestra respuesta en consola
+
+@enduml

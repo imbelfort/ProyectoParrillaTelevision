@@ -1,0 +1,66 @@
+@startuml
+title CU7 - Conciliar Emision Real y Registrar Auditoria
+
+actor "Operador / administrador" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "EmisionRealLogService" as EmisionService
+participant "EmisionRealLogDAO" as EmisionDAO
+participant "AuditoriaSistemaService" as AuditoriaService
+participant "AuditoriaSistemaDAO" as AuditoriaDAO
+participant "PostgreSQL" as BD
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando emision o auditoria
+Entrada -> Home : Entrega comando
+Home -> Home : Interpreta accion y parametros
+
+alt Operacion de emision real
+    Home -> EmisionService : Ejecuta accion As-Run
+    alt Registrar o conciliar emision
+        alt Conciliar con parrilla
+            EmisionService -> EmisionDAO : conciliarItem(id, operador, estado)
+            EmisionDAO -> BD : Consulta horario programado
+            BD --> EmisionDAO : Fecha y horas del bloque
+            EmisionDAO -> BD : INSERT emision_real_log
+            BD --> EmisionDAO : Resultado
+        else Registrar datos de emision
+            EmisionService -> EmisionService : Valida y calcula duracion real
+            EmisionService -> EmisionDAO : create(registro)
+            EmisionDAO -> BD : INSERT emision_real_log
+            BD --> EmisionDAO : Resultado
+        end
+        EmisionDAO --> EmisionService : Confirmacion
+        EmisionService --> Home : Emision registrada
+        Home -> AuditoriaService : Registra accion de emision
+        AuditoriaService -> AuditoriaDAO : create(evento)
+        AuditoriaDAO -> BD : INSERT auditoria_sistema
+        BD --> AuditoriaDAO : Resultado
+        Home -> EmisionService : listarEmisiones()
+        EmisionService -> EmisionDAO : listAll()
+        EmisionDAO -> BD : SELECT bitacora As-Run
+        BD --> EmisionDAO : Registros
+        EmisionDAO --> EmisionService : Lista de emisiones
+        EmisionService --> Home : Bitacora actualizada
+    else Listar, consultar o ver discrepancias
+        EmisionService -> EmisionDAO : Ejecuta consulta As-Run
+        EmisionDAO -> BD : SELECT emisiones, detalle o discrepancias
+        BD --> EmisionDAO : Registros
+        EmisionDAO --> EmisionService : Datos de emision
+        EmisionService --> Home : Resultado de consulta
+    end
+else Consultar auditoria
+    Home -> AuditoriaService : Solicita lista o eventos por usuario
+    AuditoriaService -> AuditoriaDAO : listAll() o listByUsuario(id)
+    AuditoriaDAO -> BD : SELECT auditoria_sistema
+    BD --> AuditoriaDAO : Eventos
+    AuditoriaDAO --> AuditoriaService : Registros de auditoria
+    AuditoriaService --> Home : Resultado de consulta
+end
+
+Home -> Home : Genera tabla, confirmacion o error
+Home -> Correo : Envia respuesta si el remitente es correo
+Correo --> Usuario : Respuesta por correo
+Home --> Entrada : Muestra respuesta en consola
+
+@enduml

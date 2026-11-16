@@ -1,0 +1,62 @@
+@startuml
+title CU6 - Gestion de Pauta Publicitaria y Spots
+
+actor "Programador" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "Servicios CU6" as Servicio
+participant "DAO CU6" as DAO
+participant "AuditoriaSistemaService" as Auditoria
+participant "PostgreSQL" as BD
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando cliente, spot o pauta
+Entrada -> Home : Entrega comando
+Home -> Home : Interpreta accion y parametros
+Home -> Servicio : Ejecuta accion CU6
+
+alt Gestionar cliente publicitario
+    Servicio -> Servicio : Valida datos del cliente
+    Servicio -> DAO : Crear, listar o consultar cliente
+    DAO -> BD : INSERT o SELECT cliente_publicitario
+    BD --> DAO : Resultado
+    DAO --> Servicio : Datos o confirmacion
+    Servicio --> Home : Resultado de la operacion
+else Gestionar spot comercial
+    Servicio -> Servicio : Valida cliente, codigo y vigencia
+    Servicio -> DAO : Crear, listar o consultar spot
+    DAO -> BD : INSERT o SELECT spot_publicitario
+    BD --> DAO : Resultado
+    DAO --> Servicio : Datos o confirmacion
+    Servicio --> Home : Resultado de la operacion
+else Insertar spot en pauta
+    Servicio -> Servicio : Valida bloque, spot, tanda y orden
+    Servicio -> DAO : insertarPauta()
+    DAO -> BD : INSERT pauta_comercial\nestado PAUTADO
+    BD --> DAO : Resultado
+    DAO --> Servicio : Confirmacion
+    Servicio --> Home : Pauta insertada
+    Home -> Auditoria : Registra INSERT de pauta
+    Auditoria -> BD : INSERT auditoria
+    BD --> Auditoria : Resultado
+    Home -> Servicio : listarPautas()
+    Servicio -> DAO : listAll()
+    DAO -> BD : SELECT pautas
+    BD --> DAO : Pautas actualizadas
+    DAO --> Servicio : Lista de pautas
+    Servicio --> Home : Lista actualizada
+else Consultar o administrar pautas
+    Servicio -> Servicio : Valida parametros si aplica
+    Servicio -> DAO : Listar, consultar, cambiar estado o eliminar
+    DAO -> BD : SELECT, UPDATE o DELETE pauta_comercial
+    BD --> DAO : Datos o resultado
+    DAO --> Servicio : Resultado de la operacion
+    Servicio --> Home : Resultado
+end
+
+Home -> Home : Genera tabla, confirmacion o error
+Home -> Correo : Envia respuesta si el remitente es correo
+Correo --> Usuario : Respuesta por correo
+Home --> Entrada : Muestra respuesta en consola
+
+@enduml

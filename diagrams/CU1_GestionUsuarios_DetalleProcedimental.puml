@@ -1,0 +1,68 @@
+@startuml
+title CU1 - Gestion de Usuarios
+
+actor "Administrador / operador" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "UsuarioService" as Servicio
+participant "UsuarioDAO" as DAO
+participant "RolDAO" as RolDAO
+participant "PostgreSQL" as BD
+participant "AuditoriaSistemaService" as Auditoria
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando usuario <accion>
+Entrada -> Home : Entrega comando como Email
+Home -> Home : Interpreta comando y parametros
+Home -> Servicio : Ejecuta accion CU1
+
+alt Listar usuarios
+    Servicio -> DAO : listarUsuarios()
+    DAO -> BD : SELECT usuarios
+    BD --> DAO : Registros
+    DAO --> Servicio : Lista de usuarios
+else Consultar usuario
+    Servicio -> DAO : consultarUsuario(id)
+    DAO -> BD : SELECT por ID
+    BD --> DAO : Usuario o sin resultado
+    DAO --> Servicio : Datos o null
+else Agregar usuario
+    Servicio -> Servicio : Valida y normaliza datos
+    Servicio -> DAO : create(usuario)
+    DAO -> BD : INSERT usuario
+    BD --> DAO : Resultado / ID
+    DAO --> Servicio : Usuario creado
+    Servicio -> RolDAO : Asigna rol si fue indicado
+    RolDAO -> BD : INSERT asignacion de rol
+    BD --> RolDAO : Resultado
+else Modificar usuario
+    Servicio -> Servicio : Valida y normaliza datos
+    Servicio -> DAO : actualizarUsuario(datos)
+    DAO -> BD : UPDATE usuario
+    BD --> DAO : Resultado
+    DAO --> Servicio : Resultado
+else Eliminar usuario
+    Servicio -> DAO : eliminarUsuario(id)
+    DAO -> BD : DELETE usuario
+    BD --> DAO : Resultado
+    DAO --> Servicio : Resultado
+end
+
+Servicio --> Home : Datos o resultado de la accion
+opt Agregar, modificar o eliminar
+    Home -> Auditoria : Registra INSERT / UPDATE / DELETE
+    Auditoria -> BD : INSERT auditoria
+    BD --> Auditoria : Resultado
+    Home -> Servicio : listarUsuarios()
+    Servicio -> DAO : listAll()
+    DAO -> BD : SELECT usuarios
+    BD --> DAO : Registros actualizados
+    DAO --> Servicio : Lista de usuarios
+    Servicio --> Home : Lista actualizada
+end
+Home -> Home : Genera respuesta HTML\n(tabla, confirmacion o error)
+Home -> Correo : Envia respuesta al remitente\n(si esta disponible)
+Correo --> Usuario : Respuesta por correo
+Home --> Entrada : Muestra respuesta en consola
+
+@enduml

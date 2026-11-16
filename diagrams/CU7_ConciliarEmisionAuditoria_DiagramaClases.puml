@@ -1,0 +1,111 @@
+@startuml
+title CU7 - Diagrama de Clases de Emision Real y Auditoria
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+class Operador <<actor>> {
+  Registra y consulta emisiones
+}
+
+package "Presentacion" {
+  class Home {
+    +emisionReal(event)
+    +auditoria(event)
+  }
+}
+
+package "Negocio" {
+  class EmisionRealLogService {
+    +conciliarEmision(params)
+    +registrarEmisionReal(params)
+    +listarEmisiones()
+    +listarDiscrepancias()
+    +consultarPorItem(idItem)
+  }
+
+  class AuditoriaSistemaService {
+    +registrarAuditoria(idUsuario, tabla, accion, detalle)
+    +listarAuditoria()
+    +listarPorUsuario(idUsuario)
+  }
+
+  class Validator {
+    +validarId(valor)
+    +validarEstado(valor)
+    +validarTextoSeguro(valor)
+  }
+}
+
+package "Acceso a datos" {
+  class EmisionRealLogDAO {
+    +create(log)
+    +conciliarItem(idItem, operador, estado, discrepancia, observaciones)
+    +listAll()
+    +listDiscrepancias()
+    +readByItemParrilla(idItem)
+  }
+
+  class AuditoriaSistemaDAO {
+    +create(auditoria)
+    +listAll()
+    +listByUsuario(idUsuario)
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+package "Modelo" {
+  class EmisionRealLog {
+    -id: int
+    -idItemParrilla: int
+    -idMaterialVideo: Integer
+    -horaInicioReal: Timestamp
+    -horaFinReal: Timestamp
+    -duracionRealSegundos: int
+    -discrepanciaSegundos: int
+    -estadoEmision: String
+    -operadorEmision: String
+  }
+
+  class AuditoriaSistema {
+    -id: int
+    -idUsuario: Integer
+    -tablaAfectada: String
+    -accion: String
+    -detalle: String
+    -fechaEvento: Timestamp
+  }
+
+  class ItemParrilla {
+    -id: int
+    -horaInicio: Time
+    -horaFin: Time
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+Operador --> Home : envia comando
+Home ..> EmisionRealLogService : registra y consulta As-Run
+Home ..> AuditoriaSistemaService : registra y consulta eventos
+EmisionRealLogService ..> Validator : valida datos
+EmisionRealLogService ..> EmisionRealLogDAO : ejecuta operaciones
+AuditoriaSistemaService ..> AuditoriaSistemaDAO : ejecuta operaciones
+
+EmisionRealLogDAO ..> EmisionRealLog : persiste
+AuditoriaSistemaDAO ..> AuditoriaSistema : persiste
+ItemParrilla "1" -- "0..*" EmisionRealLog : tiene registros de emision
+
+EmisionRealLogDAO ..> Conexion : obtiene conexion JDBC
+AuditoriaSistemaDAO ..> Conexion : obtiene conexion JDBC
+Conexion ..> BD : JDBC
+EmisionRealLogDAO ..> BD : As-Run y conciliacion
+AuditoriaSistemaDAO ..> BD : CRUD auditoria
+
+@enduml

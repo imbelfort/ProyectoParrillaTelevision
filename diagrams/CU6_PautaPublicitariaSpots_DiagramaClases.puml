@@ -1,0 +1,152 @@
+@startuml
+title CU6 - Diagrama de Clases de Pauta Publicitaria y Spots
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+class Programador <<actor>> {
+  Gestiona publicidad
+}
+
+package "Presentacion" {
+  class Home {
+    +cliente(event)
+    +spot(event)
+    +pauta(event)
+  }
+}
+
+package "Negocio" {
+  class ClientePublicitarioService {
+    +crearCliente(params)
+    +consultarCliente(id)
+    +listarClientes()
+  }
+
+  class SpotPublicitarioService {
+    +crearSpot(params)
+    +consultarSpot(id)
+    +listarSpots()
+  }
+
+  class PautaComercialService {
+    +insertarPauta(params)
+    +cambiarEstado(params)
+    +eliminarPauta(id)
+    +consultarPauta(id)
+    +listarPautas()
+    +listarPorItem(idItem)
+  }
+
+  class Validator {
+    +validarId(valor)
+    +validarCodigo(valor)
+    +validarTextoSeguro(valor)
+    +validarFecha(valor)
+    +validarHora(valor)
+  }
+
+  class AuditoriaSistemaService {
+    +registrarAuditoria(idUsuario, tabla, accion, detalle)
+  }
+}
+
+package "Acceso a datos" {
+  class ClientePublicitarioDAO {
+    +create(cliente)
+    +readById(id)
+    +listAll()
+  }
+
+  class SpotPublicitarioDAO {
+    +create(spot)
+    +readById(id)
+    +listAll()
+  }
+
+  class PautaComercialDAO {
+    +create(pauta)
+    +updateEstado(id, estado)
+    +delete(id)
+    +readById(id)
+    +listAll()
+    +listByItemParrilla(idItem)
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+package "Modelo" {
+  class ClientePublicitario {
+    -id: int
+    -razonSocial: String
+    -nit: String
+    -email: String
+    -estado: String
+  }
+
+  class SpotPublicitario {
+    -id: int
+    -idCliente: int
+    -codigoSpot: String
+    -tituloSpot: String
+    -duracionSegundos: int
+    -estado: String
+  }
+
+  class PautaComercial {
+    -id: int
+    -idItemParrilla: int
+    -idSpot: int
+    -tandaBloque: String
+    -orden: int
+    -horaEstimada: Time
+    -estado: String
+  }
+
+  class ItemParrilla {
+    -id: int
+    -idParrilla: int
+    -horaInicio: Time
+    -horaFin: Time
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+Programador --> Home : envia comando
+Home ..> ClientePublicitarioService : gestiona clientes
+Home ..> SpotPublicitarioService : gestiona spots
+Home ..> PautaComercialService : gestiona pautas
+Home ..> AuditoriaSistemaService : registra insercion de pauta
+
+ClientePublicitarioService ..> Validator : valida datos
+SpotPublicitarioService ..> Validator : valida datos
+PautaComercialService ..> Validator : valida datos
+ClientePublicitarioService ..> ClientePublicitarioDAO : ejecuta operaciones
+SpotPublicitarioService ..> SpotPublicitarioDAO : ejecuta operaciones
+PautaComercialService ..> PautaComercialDAO : ejecuta operaciones
+
+ClientePublicitarioDAO ..> ClientePublicitario : persiste
+SpotPublicitarioDAO ..> SpotPublicitario : persiste
+PautaComercialDAO ..> PautaComercial : persiste
+ClientePublicitario "1" -- "0..*" SpotPublicitario : posee
+SpotPublicitario "1" -- "0..*" PautaComercial : se pauta en
+ItemParrilla "1" -- "0..*" PautaComercial : contiene pauta
+
+ClientePublicitarioDAO ..> Conexion : obtiene conexion JDBC
+SpotPublicitarioDAO ..> Conexion : obtiene conexion JDBC
+PautaComercialDAO ..> Conexion : obtiene conexion JDBC
+AuditoriaSistemaService ..> Conexion : registra eventos
+Conexion ..> BD : JDBC
+ClientePublicitarioDAO ..> BD : CRUD clientes
+SpotPublicitarioDAO ..> BD : CRUD spots
+PautaComercialDAO ..> BD : CRUD pautas
+AuditoriaSistemaService ..> BD : INSERT auditoria
+
+@enduml

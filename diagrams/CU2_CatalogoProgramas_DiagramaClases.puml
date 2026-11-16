@@ -1,0 +1,110 @@
+@startuml
+title CU2 - Diagrama de Clases del Catalogo de Programas
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+class Usuario <<actor>> {
+  Programador / administrador
+}
+
+package "Presentacion" {
+  class Home {
+    +programa(event)
+    +categoria(event)
+  }
+}
+
+package "Negocio" {
+  class ProgramaService {
+    +crearPrograma(params)
+    +modificarPrograma(params)
+    +eliminarPrograma(id)
+    +consultarPrograma(id)
+    +listarProgramas()
+  }
+
+  class CategoriaProgramaService {
+    +crearCategoria(params)
+    +listarCategorias()
+    +consultarCategoria(id)
+  }
+
+  class Validator {
+    +validarCodigo(valor)
+    +validarTextoSeguro(valor)
+    +validarDuracion(valor)
+  }
+
+  class AuditoriaSistemaService {
+    +registrarAuditoria(idUsuario, tabla, accion, detalle)
+  }
+}
+
+package "Acceso a datos" {
+  class ProgramaDAO {
+    +create(programa)
+    +update(programa)
+    +delete(id)
+    +readById(id)
+    +listAll()
+  }
+
+  class CategoriaProgramaDAO {
+    +create(categoria)
+    +readById(id)
+    +listAll()
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+package "Modelo" {
+  class Programa {
+    -id: int
+    -codigo: String
+    -titulo: String
+    -idCategoria: int
+    -clasificacionEdad: String
+    -duracionEstandarMinutos: int
+    -origen: String
+    -estado: String
+  }
+
+  class CategoriaPrograma {
+    -id: int
+    -nombre: String
+    -descripcion: String
+    -estado: String
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+Usuario --> Home : envia comando
+Home ..> ProgramaService : gestiona programas
+Home ..> CategoriaProgramaService : gestiona categorias
+Home ..> AuditoriaSistemaService : registra cambios de programa
+
+ProgramaService ..> Validator : valida datos
+CategoriaProgramaService ..> Validator : valida datos
+ProgramaService ..> ProgramaDAO : ejecuta operaciones
+CategoriaProgramaService ..> CategoriaProgramaDAO : ejecuta operaciones
+ProgramaDAO ..> Programa : persiste
+CategoriaProgramaDAO ..> CategoriaPrograma : persiste
+CategoriaPrograma "1" -- "0..*" Programa : clasifica
+
+ProgramaDAO ..> Conexion : obtiene conexion JDBC
+CategoriaProgramaDAO ..> Conexion : obtiene conexion JDBC
+AuditoriaSistemaService ..> Conexion : registra eventos
+Conexion ..> BD : JDBC
+ProgramaDAO ..> BD : CRUD programa
+CategoriaProgramaDAO ..> BD : CRUD categoria_programa
+AuditoriaSistemaService ..> BD : INSERT auditoria
+
+@enduml

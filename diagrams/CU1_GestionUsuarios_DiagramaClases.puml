@@ -1,0 +1,120 @@
+@startuml
+title CU1 - Diagrama de Clases de Gestion de Usuarios y Roles
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam ArrowFontSize 11
+skinparam class {
+  BackgroundColor #FDFDFD
+  BorderColor #444444
+  ArrowColor #333333
+}
+
+' ===== Actor =====
+class Admin <<actor>> {
+  Administrador
+}
+
+' ===== Capa de presentacion =====
+package "Presentacion" #E8F1FB {
+  class Home {
+    +usuario(event)
+    +rol(event)
+  }
+}
+
+' ===== Capa de negocio =====
+package "Negocio" #EAF7EA {
+  class UsuarioService {
+    +crearUsuario(params)
+    +actualizarUsuario(params)
+    +eliminarUsuario(id)
+    +consultarUsuario(id)
+    +listarUsuarios()
+  }
+
+  class RolService {
+    +crearRol(params)
+    +asignarRol(params)
+    +listarRoles()
+  }
+
+  class AuditoriaSistemaService {
+    +registrarAuditoria(idUsuario, tabla, accion, detalle)
+  }
+}
+
+' ===== Capa de acceso a datos =====
+package "Acceso a datos" #FFF4E0 {
+  class UsuarioDAO {
+    +create(usuario)
+    +update(usuario)
+    +delete(id)
+    +readById(id)
+    +listAll()
+  }
+
+  class RolDAO {
+    +create(rol)
+    +listAll()
+    +asignarRolUsuario(idUsuario, idRol)
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+' ===== Modelo =====
+package "Modelo" #F3EAF8 {
+  class Usuario {
+    -idUsuario
+    -nombre
+    -email
+    -estado
+  }
+
+  class Rol {
+    -id
+    -nombre
+    -descripcion
+    -estado
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+' ===== Flujo principal (de arriba hacia abajo) =====
+Admin --> Home : envia comando
+
+Home ..> UsuarioService : gestiona usuarios
+Home ..> RolService : gestiona roles
+Home ..> AuditoriaSistemaService : registra cambios
+
+UsuarioService ..> UsuarioDAO : delega operaciones
+UsuarioService ..> RolDAO : asigna rol al crear
+RolService ..> RolDAO : gestiona roles
+
+UsuarioDAO ..> Conexion : obtiene conexion
+RolDAO ..> Conexion : obtiene conexion
+AuditoriaSistemaService ..> Conexion : registra eventos
+
+Conexion ..> BD : JDBC
+
+' ===== Modelo (lado derecho) =====
+UsuarioDAO ..> Usuario : persiste
+RolDAO ..> Rol : persiste
+Usuario "*" -- "*" Rol : tiene
+
+' ===== Ayudas de posicion (invisibles) =====
+UsuarioService -[hidden]right- RolService
+RolService -[hidden]right- AuditoriaSistemaService
+UsuarioDAO -[hidden]right- RolDAO
+Usuario -[hidden]right- Rol
+
+@enduml

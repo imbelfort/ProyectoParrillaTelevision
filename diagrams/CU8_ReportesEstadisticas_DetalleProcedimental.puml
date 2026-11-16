@@ -1,0 +1,26 @@
+@startuml
+title CU8 - Reportes y Estadisticas
+
+actor "Administrador / usuario autorizado" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "ReporteService" as Servicio
+participant "ReporteDAO" as DAO
+participant "PostgreSQL" as BD
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando reporte <tipo>
+Entrada -> Home : Entrega comando
+Home -> Home : Interpreta tipo de reporte
+Home -> Servicio : Solicita generacion del reporte
+Servicio -> DAO : Ejecuta consulta correspondiente
+DAO -> BD : Consulta agregada o detallada\nsobre datos del sistema
+BD --> DAO : Registros y estadisticas
+DAO --> Servicio : Resultado del reporte
+Servicio --> Home : Datos del reporte
+Home -> Home : Genera tabla HTML
+Home -> Correo : Envia reporte si el remitente es correo
+Correo --> Usuario : Recibe reporte
+Home --> Entrada : Muestra reporte en consola
+
+@enduml

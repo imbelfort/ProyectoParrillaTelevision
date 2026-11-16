@@ -1,0 +1,102 @@
+@startuml
+title CU4 - Diagrama de Clases de Gestion de Materiales de Video
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+class Operador <<actor>> {
+  Encargado de contenidos
+}
+
+package "Presentacion" {
+  class Home {
+    +materialVideo(event)
+  }
+}
+
+package "Negocio" {
+  class MaterialVideoService {
+    +crearMaterial(params)
+    +actualizarEstado(params)
+    +eliminarMaterial(id)
+    +consultarMaterial(id)
+    +listarMateriales()
+    +listarPorPrograma(idPrograma)
+  }
+
+  class Validator {
+    +validarId(valor)
+    +validarCodigo(valor)
+    +validarTextoSeguro(valor)
+    +validarDuracion(valor)
+  }
+
+  class AuditoriaSistemaService {
+    +registrarAuditoria(idUsuario, tabla, accion, detalle)
+  }
+}
+
+package "Acceso a datos" {
+  class MaterialVideoDAO {
+    +create(material)
+    +updateEstado(id, estado)
+    +delete(id)
+    +readById(id)
+    +listAll()
+    +listByPrograma(idPrograma)
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+package "Modelo" {
+  class MaterialVideo {
+    -id: int
+    -idPrograma: int
+    -codigoMaterial: String
+    -tituloClip: String
+    -formato: String
+    -resolucion: String
+    -duracionSegundos: int
+    -rutaServidor: String
+    -estado: String
+    -idResponsable: int
+  }
+
+  class Programa {
+    -id: int
+    -codigo: String
+    -titulo: String
+  }
+
+  class Usuario {
+    -idUsuario: int
+    -nombre: String
+    -apellidos: String
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+Operador --> Home : envia comando
+Home ..> MaterialVideoService : gestiona materiales
+Home ..> AuditoriaSistemaService : registra ingestas y cambios de estado
+
+MaterialVideoService ..> Validator : valida datos
+MaterialVideoService ..> MaterialVideoDAO : ejecuta operaciones
+MaterialVideoDAO ..> MaterialVideo : persiste
+Programa "1" -- "0..*" MaterialVideo : contiene clips
+Usuario "1" -- "0..*" MaterialVideo : es responsable
+
+MaterialVideoDAO ..> Conexion : obtiene conexion JDBC
+AuditoriaSistemaService ..> Conexion : registra eventos
+Conexion ..> BD : JDBC
+MaterialVideoDAO ..> BD : CRUD material_video
+AuditoriaSistemaService ..> BD : INSERT auditoria
+
+@enduml
