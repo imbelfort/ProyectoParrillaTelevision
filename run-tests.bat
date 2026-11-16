@@ -20,8 +20,16 @@ echo [2/3] Ejecutando Prueba de Conexion POP3...
 java -cp "build/classes;lib/*" test.PruebaConexionPOP
 
 echo.
-echo [3/3] Ejecutando Prueba de Flujo Completo (8 Casos de Uso + SMTP)...
+echo [3/4] Ejecutando Prueba de Comandos Rapidos (8 Casos de Uso + SMTP)...
 java -cp "build/classes;lib/*" test.PruebaFlujoCompleto
+
+echo.
+echo [4/5] Ejecutando Prueba de Ciclo de Vida Completo (CRUD Paso a Paso E2E)...
+java -cp "build/classes;lib/*" test.PruebaCicloVidaCompleto
+
+echo.
+echo [5/5] Ejecutando Prueba en Consola Simulando Roles Operativos...
+java -cp "build/classes;lib/*" test.PruebaConsolaPorRoles
 
 echo.
 echo =================================================================

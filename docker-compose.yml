@@ -1,12 +1,77 @@
+version: '3.8'
+
 services:
-  parrilla-tv-server:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  # Servidor de Base de Datos PostgreSQL local
+  postgres:
+    image: postgres:15-alpine
+    container_name: parrilla-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: db_grupo12sc
+      POSTGRES_USER: grupo12sc
+      POSTGRES_PASSWORD: grup012grup012*
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_parrilla:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grupo12sc -d db_grupo12sc"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Servidor de Correo Local POP3/SMTP/IMAP (GreenMail)
+  mailserver:
+    image: greenmail/standalone:2.1.0
+    container_name: parrilla-mailserver
+    restart: always
+    environment:
+      GREENMAIL_OPTS: >-
+        -Dgreenmail.setup.all
+        -Dgreenmail.hostname=0.0.0.0
+        -Dgreenmail.users=grupo12sc:grup012grup012*@tecnoweb.org.bo,admin:admin123@tecnoweb.org.bo,programador:prog123@tecnoweb.org.bo,contenidos:cont123@tecnoweb.org.bo,operador:123456@tecnoweb.org.bo
+    ports:
+      - "25:25"       # SMTP
+      - "110:110"     # POP3
+      - "143:143"     # IMAP
+      - "8080:8080"   # GreenMail API / Dashboard
+
+  # Webmail Roundcube Personalizado
+  webmail:
+    image: roundcube/roundcubemail:latest
+    container_name: parrilla-webmail
+    restart: always
+    ports:
+      - "8085:80"
+    environment:
+      ROUNDCUBEMAIL_DEFAULT_HOST: mailserver
+      ROUNDCUBEMAIL_SMTP_SERVER: mailserver
+      ROUNDCUBEMAIL_SMTP_PORT: 25
+      ROUNDCUBEMAIL_DEFAULT_PORT: 143
+      ROUNDCUBEMAIL_SKIN: elastic
+      ROUNDCUBEMAIL_PRODUCT_NAME: "Webmail Parrilla TV & Playout - Grupo 12 SC"
+    depends_on:
+      - mailserver
+
+  # Demonio Java Parrilla de Televisión
+  app:
+    build: .
     container_name: parrilla-tv-server
     restart: unless-stopped
-    stdin_open: true
-    tty: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailserver:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      MAIL_HOST: mailserver
+      MAIL_SMTP_PORT: 25
+      MAIL_POP_PORT: 110
     dns:
       - 8.8.8.8
       - 1.1.1.1
+
+volumes:
+  pgdata_parrilla:

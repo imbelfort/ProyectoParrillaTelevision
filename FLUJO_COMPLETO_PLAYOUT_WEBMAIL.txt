@@ -1,0 +1,202 @@
+================================================================================
+   FLUJO COMPLETO DE COMANDOS POR CORREO - PARRILLA DE TELEVISION (PLAYOUT)
+   SISTEMA DE GESTION DE PARRILLA Y CONTROL DE EMISION - GRUPO 12 SC
+================================================================================
+
+1. ACCESO AL WEBMAIL PERSONALIZADO (ROUNDCUBE)
+--------------------------------------------------------------------------------
+URL DEL WEBMAIL: http://localhost:8085
+
+IMPORTANTE PARA EL INICIO DE SESION:
+En el campo "Username" o "Usuario", debes ingresar SOLO el nombre de usuario
+(sin el '@tecnoweb.org.bo'). Al ingresar, Roundcube conecta automáticamente tu cuenta.
+
+CUENTAS Y CREDENCIALES DE ACCESO AL WEBMAIL:
++-------------------+--------------------+---------------+-----------------------------+
+| Rol Operativo     | Usuario (Login)    | Contrasena    | Direccion de Envio          |
++-------------------+--------------------+---------------+-----------------------------+
+| Administrador     | admin              | admin123      | admin@tecnoweb.org.bo       |
+| Programador       | programador        | prog123       | programador@tecnoweb.org.bo |
+| Control Calidad   | contenidos         | cont123       | contenidos@tecnoweb.org.bo  |
+| Operador Master   | operador           | 123456        | operador@tecnoweb.org.bo    |
+| Servidor Sistema  | grupo12sc          | grup012grup012*| grupo12sc@tecnoweb.org.bo  |
++-------------------+--------------------+---------------+-----------------------------+
+
+DESTINATARIO DE TODOS LOS CORREOS:
+   Para: grupo12sc@tecnoweb.org.bo
+   Asunto (Subject): <Escribir exactamente el comando>
+   Cuerpo del correo: Puede dejarse vacio o poner una breve nota.
+
+
+================================================================================
+2. PASO A PASO DEL FLUJO COMPLETO (ORDEN CRONOLOGICO DE PRUEBA)
+================================================================================
+
+--------------------------------------------------------------------------------
+PASO 1: COMANDO DE BIENVENIDA Y MANUAL DE AYUDA (HELP)
+--------------------------------------------------------------------------------
+Iniciar sesion como: admin (contrasena: admin123)
+Redactar correo para: grupo12sc@tecnoweb.org.bo
+Asunto:
+help
+
+(El sistema respondera por correo con la tabla HTML de todos los comandos y entidades disponibles).
+
+
+--------------------------------------------------------------------------------
+PASO 2: FASE ADMINISTRADOR - GESTION DE USUARIOS, ROLES Y AUDITORIA (CU1)
+--------------------------------------------------------------------------------
+Iniciar sesion como: admin (contrasena: admin123)
+Para: grupo12sc@tecnoweb.org.bo
+
+2.1. Listar usuarios actuales del canal:
+usuario listar
+
+2.2. Agregar un nuevo operador al canal:
+usuario agregar Marcos,Gomez,marcos@canal.com,123,Programador
+
+2.3. Consultar la ficha tecnica de un usuario:
+usuario consultar 1
+
+2.4. Modificar datos de un usuario:
+usuario modificar 1,Carlos,Roca Arteaga,admin@tecnoweb.org.bo,admin123,Administrador,ACTIVO
+
+2.5. Listar roles del sistema:
+rol listar
+
+2.6. Agregar nuevo rol operativo:
+rol agregar MasterControl,Operador de transmision y emision
+
+2.7. Asignar rol a un usuario:
+rol asignar 1,1
+
+2.8. Ver bitacora de auditoria del sistema:
+auditoria listar
+
+2.9. Generar reporte estadistico general del canal:
+reporte general
+
+
+--------------------------------------------------------------------------------
+PASO 3: FASE PROGRAMADOR - CATALOGO, PARRILLA Y PAUTAS COMERCIALES (CU2, CU3, CU6)
+--------------------------------------------------------------------------------
+Cerrar sesion e iniciar sesion como: programador (contrasena: prog123)
+Para: grupo12sc@tecnoweb.org.bo
+
+3.1. Listar categorias o generos de programas:
+categoria listar
+
+3.2. Agregar nueva categoria:
+categoria agregar Magazines,Variedades y entrevistas matutinas
+
+3.3. Registrar un nuevo programa en el catalogo:
+programa agregar PROG-77,En Familia Magazine,60
+
+3.4. Listar el catalogo de programas:
+programa listar
+
+3.5. Consultar detalle de un programa:
+programa consultar 1
+
+3.6. Crear la parrilla de programacion para una fecha:
+parrilla crear 2026-11-28
+
+3.7. Listar las parrillas registradas:
+parrilla listar
+
+3.8. Consultar la parrilla recien creada:
+parrilla consultar 1
+
+3.9. Asignar un programa a un bloque horario (Item de Parrilla):
+item agregar 1,1,17:00,18:00
+
+3.10. Listar los bloques horarios de la parrilla:
+item listar
+
+3.11. Aprobar oficialmente la parrilla de emision:
+parrilla estado 1,APROBADA
+
+3.12. Consultar rundown de la jornada de hoy:
+parrilla hoy
+
+3.13. Registrar cliente anunciante publicitario:
+cliente agregar Cerveceria Pacena,1099887766,Lic. Banegas,contacto@cbn.bo,70012345
+
+3.14. Listar clientes anunciantes:
+cliente listar
+
+3.15. Registrar un spot comercial para el cliente:
+spot agregar 1,SPOT-99,Promo Fin de Ano 30s,30
+
+3.16. Listar spots comerciales:
+spot listar
+
+3.17. Insertar spot publicitario en la tanda del bloque (Pauta Rundown):
+pauta agregar 1,1,CORTE_1,1
+
+3.18. Listar pautas comerciales programadas:
+pauta listar
+
+3.19. Reportes de programacion:
+reporte parrilla
+reporte programas
+
+
+--------------------------------------------------------------------------------
+PASO 4: FASE CONTENIDOS Y CONTROL DE CALIDAD - MAM, QC Y PLAYOUT (CU4, CU5, CU7, CU8)
+--------------------------------------------------------------------------------
+Cerrar sesion e iniciar sesion como: contenidos (contrasena: cont123)
+Para: grupo12sc@tecnoweb.org.bo
+
+4.1. Ingestar clip de video al storage MAM:
+material agregar 1,CLIP-77,Cabecera En Familia,60
+
+4.2. Listar materiales en el storage MAM:
+material listar
+
+4.3. Aprobar estado tecnico del material de video:
+material estado 1,LISTO
+
+4.4. Consultar bloques de parrilla pendientes de revision tecnica (QC):
+validacion pendientes
+
+4.5. Aprobar bloque para su salida al aire (QC Broadcast):
+validacion aprobar 1
+
+4.6. Consultar validacion del bloque:
+validacion consultar 1
+
+4.7. Certificar que el spot comercial fue emitido al aire:
+pauta estado 1,EMITIDO
+
+4.8. Conciliar la emision real con la parrilla oficial:
+emision conciliar 1
+
+4.9. Listar log de emision real (As-Run Log):
+emision listar
+
+4.10. Consultar discrepancias o desfases de tiempo al aire:
+emision discrepancias
+
+4.11. Consultar que programa o evento esta al aire en este instante:
+emision al_aire
+
+4.12. Reportes de certificacion comercial y cumplimiento de transmision:
+reporte pautas
+reporte cumplimiento
+
+
+================================================================================
+3. GUIA RAPIDA PARA EJECUTAR EL PROYECTO
+================================================================================
+Opcion A: Con Docker (Webmail + MailServer + PostgreSQL + App Demonio)
+   1. Ejecutar: docker-start.bat
+   2. Abrir en el navegador: http://localhost:8085
+   3. Ingresar en Username solo el usuario (ej. 'admin', 'programador', 'contenidos').
+   4. Redactar correos con destinatario grupo12sc@tecnoweb.org.bo y el comando en el Subject.
+
+Opcion B: Modo Consola Local interactiva
+   1. Ejecutar: run-consola.bat
+   2. Cambiar de rol con: 'as admin', 'as programador', 'as contenidos'.
+   3. Escribir directamente los comandos anteriores.
+================================================================================

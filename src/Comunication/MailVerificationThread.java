@@ -18,13 +18,29 @@ import Utils.Extractor;
 
 public class MailVerificationThread implements Runnable {
 
-    private final static int PORT_POP = 110;
-    private final static int PORT_IMAP = 143;
-    private final static int PORT_SMTP = 25;
+    private static int getPortPopInt() {
+        try {
+            return Integer.parseInt(Database.ConfigEmailServer.getPortPop());
+        } catch (Exception e) {
+            return 110;
+        }
+    }
 
-    private final static String HOST = "mail.tecnoweb.org.bo";
-    private final static String USER = "grupo12sc";
-    private final static String PASSWORD = "grup012grup012*";
+    private static int getPortSmtpInt() {
+        try {
+            return Integer.parseInt(Database.ConfigEmailServer.getPortSmtp());
+        } catch (Exception e) {
+            return 25;
+        }
+    }
+
+    private final static int PORT_POP = getPortPopInt();
+    private final static int PORT_IMAP = 143;
+    private final static int PORT_SMTP = getPortSmtpInt();
+
+    private final static String HOST = Database.ConfigEmailServer.getHost();
+    private final static String USER = Database.ConfigEmailServer.USER;
+    private final static String PASSWORD = Database.ConfigEmailServer.PASSWORD;
 
     private final static int CONNECT_TIMEOUT_MS = 5000;
     private final static int LOOP_DELAY_MS = 5000;

@@ -41,9 +41,17 @@ import javax.mail.util.ByteArrayDataSource;
 
 public class SendEmail {
 
-    private final static int PORT_SMTP = 25;
-    private final static String SERVER = "mail.tecnoweb.org.bo";
-    private final static String user_emisor = "grupo12sc@tecnoweb.org.bo";
+    private static int getPortSmtpInt() {
+        try {
+            return Integer.parseInt(ConfigEmailServer.getPortSmtp());
+        } catch (Exception e) {
+            return 25;
+        }
+    }
+
+    private final static int PORT_SMTP = getPortSmtpInt();
+    private final static String SERVER = ConfigEmailServer.getHost();
+    private final static String user_emisor = ConfigEmailServer.MAIL;
     private static String user_receptor;
     private static Socket socket;
     private static BufferedReader entrada;
