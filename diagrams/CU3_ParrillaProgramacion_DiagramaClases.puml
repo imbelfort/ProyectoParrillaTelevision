@@ -1,0 +1,127 @@
+@startuml
+title CU3 - Diagrama de Clases de la Parrilla de Programacion
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+class Usuario <<actor>> {
+  Programador / operador
+}
+
+package "Presentacion" {
+  class Home {
+    +parrilla(event)
+    +itemParrilla(event)
+  }
+}
+
+package "Negocio" {
+  class ParrillaService {
+    +crearParrilla(params)
+    +cambiarEstado(params)
+    +eliminarParrilla(id)
+    +consultarParrilla(id)
+    +listarParrillas()
+  }
+
+  class ItemParrillaService {
+    +crearItemParrilla(params)
+    +modificarItemParrilla(params)
+    +eliminarItemParrilla(id)
+    +listarPorParrilla(id)
+    +consultarAlAire()
+    +listarHoy()
+  }
+
+  class Validator {
+    +validarFecha(valor)
+    +validarId(valor)
+    +validarHora(valor)
+    +validarHorarioBloque(inicio, fin)
+  }
+
+  class AuditoriaSistemaService {
+    +registrarAuditoria(idUsuario, tabla, accion, detalle)
+  }
+}
+
+package "Acceso a datos" {
+  class ParrillaDAO {
+    +create(parrilla)
+    +updateEstado(id, estado)
+    +delete(id)
+    +readById(id)
+    +listAll()
+  }
+
+  class ItemParrillaDAO {
+    +create(item)
+    +update(item)
+    +delete(id)
+    +listByParrilla(id)
+    +readById(id)
+    +readAlAire()
+    +listHoy()
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+package "Modelo" {
+  class Parrilla {
+    -id: int
+    -fecha: Date
+    -canalSenial: String
+    -idProgramador: int
+    -estado: String
+  }
+
+  class ItemParrilla {
+    -id: int
+    -idParrilla: int
+    -idPrograma: int
+    -horaInicio: Time
+    -horaFin: Time
+    -tipoEmision: String
+    -estado: String
+  }
+
+  class Programa {
+    -id: int
+    -codigo: String
+    -titulo: String
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+Usuario --> Home : envia comando
+Home ..> ParrillaService : gestiona parrillas
+Home ..> ItemParrillaService : gestiona bloques
+Home ..> AuditoriaSistemaService : registra cambios de parrilla
+
+ParrillaService ..> Validator : valida fecha, ID y estado
+ItemParrillaService ..> Validator : valida IDs y horarios
+ParrillaService ..> ParrillaDAO : ejecuta operaciones
+ItemParrillaService ..> ItemParrillaDAO : ejecuta operaciones
+ParrillaDAO ..> Parrilla : persiste
+ItemParrillaDAO ..> ItemParrilla : persiste
+
+Parrilla "1" -- "0..*" ItemParrilla : contiene bloques
+Programa "1" -- "0..*" ItemParrilla : se programa en
+Usuario "1" -- "0..*" Parrilla : confecciona
+
+ParrillaDAO ..> Conexion : obtiene conexion JDBC
+ItemParrillaDAO ..> Conexion : obtiene conexion JDBC
+AuditoriaSistemaService ..> Conexion : registra eventos
+Conexion ..> BD : JDBC
+ParrillaDAO ..> BD : CRUD parrilla
+ItemParrillaDAO ..> BD : CRUD item_parrilla
+AuditoriaSistemaService ..> BD : INSERT auditoria
+
+@enduml

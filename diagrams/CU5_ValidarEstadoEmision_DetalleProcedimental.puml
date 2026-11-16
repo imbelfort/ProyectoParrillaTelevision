@@ -1,0 +1,53 @@
+@startuml
+title CU5 - Validar Estado de Emision (QC)
+
+actor "Encargado de contenidos / QC" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "ValidacionEmisionService" as Servicio
+participant "ValidacionEmisionDAO" as DAO
+participant "AuditoriaSistemaService" as Auditoria
+participant "PostgreSQL" as BD
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando validacion
+Entrada -> Home : Entrega comando
+Home -> Home : Interpreta accion y parametros
+Home -> Servicio : Ejecuta accion CU5
+
+alt Listar validaciones o pendientes
+    Servicio -> DAO : listAll() o listPendientes()
+    DAO -> BD : SELECT validaciones o bloques sin QC
+    BD --> DAO : Registros
+    DAO --> Servicio : Lista de resultados
+    Servicio --> Home : Lista
+else Consultar validacion de un bloque
+    Servicio -> DAO : readByItemParrilla(id)
+    DAO -> BD : SELECT QC por bloque
+    BD --> DAO : Validacion o sin resultado
+    DAO --> Servicio : Datos o null
+    Servicio --> Home : Resultado de consulta
+else Registrar, aprobar o rechazar QC
+    Servicio -> Servicio : Valida parametros y resultado QC
+    Servicio -> DAO : create(validacion)
+    DAO -> BD : INSERT validacion_emision
+    BD --> DAO : Resultado
+    DAO --> Servicio : Confirmacion
+    Servicio --> Home : Validacion registrada
+    Home -> Auditoria : Registra INSERT, APROBAR o RECHAZAR
+    Auditoria -> BD : INSERT auditoria
+    BD --> Auditoria : Resultado
+    Home -> Servicio : listarValidaciones()
+    Servicio -> DAO : listAll()
+    DAO -> BD : SELECT validaciones
+    BD --> DAO : Lista actualizada
+    DAO --> Servicio : Validaciones
+    Servicio --> Home : Lista actualizada
+end
+
+Home -> Home : Genera tabla, confirmacion o error
+Home -> Correo : Envia respuesta si el remitente es correo
+Correo --> Usuario : Respuesta por correo
+Home --> Entrada : Muestra respuesta en consola
+
+@enduml

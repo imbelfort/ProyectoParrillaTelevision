@@ -1,0 +1,106 @@
+@startuml
+title CU5 - Diagrama de Clases de Validacion de Emision (QC)
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+class InspectorQC <<actor>> {
+  Encargado de contenidos
+}
+
+package "Presentacion" {
+  class Home {
+    +validacion(event)
+  }
+}
+
+package "Negocio" {
+  class ValidacionEmisionService {
+    +aprobarValidacion(params)
+    +rechazarValidacion(params)
+    +registrarValidacion(params)
+    +listarValidaciones()
+    +listarPendientes()
+    +consultarPorItem(idItem)
+  }
+
+  class Validator {
+    +validarId(valor)
+    +validarEstado(valor)
+  }
+
+  class AuditoriaSistemaService {
+    +registrarAuditoria(idUsuario, tabla, accion, detalle)
+  }
+}
+
+package "Acceso a datos" {
+  class ValidacionEmisionDAO {
+    +create(validacion)
+    +listAll()
+    +listPendientes()
+    +readByItemParrilla(idItem)
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+package "Modelo" {
+  class ValidacionEmision {
+    -id: int
+    -idItemParrilla: int
+    -idMaterialVideo: Integer
+    -idInspectorQc: int
+    -resultadoQc: String
+    -aspectRatio: String
+    -nivelAudioDb: BigDecimal
+    -observaciones: String
+  }
+
+  class ItemParrilla {
+    -id: int
+    -idPrograma: int
+    -horaInicio: Time
+    -horaFin: Time
+    -estado: String
+  }
+
+  class MaterialVideo {
+    -id: int
+    -codigoMaterial: String
+    -estado: String
+  }
+
+  class Usuario {
+    -idUsuario: int
+    -nombre: String
+    -apellidos: String
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+InspectorQC --> Home : envia comando QC
+Home ..> ValidacionEmisionService : procesa validaciones
+Home ..> AuditoriaSistemaService : registra resultados QC
+
+ValidacionEmisionService ..> Validator : valida IDs y resultado
+ValidacionEmisionService ..> ValidacionEmisionDAO : registra y consulta
+ValidacionEmisionDAO ..> ValidacionEmision : persiste
+
+ItemParrilla "1" -- "0..*" ValidacionEmision : recibe validaciones
+MaterialVideo "0..1" -- "0..*" ValidacionEmision : material inspeccionado
+Usuario "1" -- "0..*" ValidacionEmision : inspector QC
+
+ValidacionEmisionDAO ..> Conexion : obtiene conexion JDBC
+AuditoriaSistemaService ..> Conexion : registra eventos
+Conexion ..> BD : JDBC
+ValidacionEmisionDAO ..> BD : CRUD y consultas QC
+AuditoriaSistemaService ..> BD : INSERT auditoria
+
+@enduml

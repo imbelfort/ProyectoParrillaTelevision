@@ -1,0 +1,59 @@
+@startuml
+title CU8 - Diagrama de Clases de Reportes y Estadisticas
+
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+class Usuario <<actor>> {
+  Solicita reportes
+}
+
+package "Presentacion" {
+  class Home {
+    +reporte(event)
+  }
+}
+
+package "Negocio" {
+  class ReporteService {
+    +generarReporteGeneral()
+    +generarReporteParrilla()
+    +generarReporteProgramas()
+    +generarReportePautas()
+    +generarReporteCumplimiento()
+  }
+}
+
+package "Acceso a datos" {
+  class ReporteDAO {
+    +reporteGeneral()
+    +reporteParrilla()
+    +reporteProgramas()
+    +reportePautas()
+    +reporteCumplimiento()
+  }
+
+  class Conexion {
+    +getInstancia()
+    +EstablecerConexion()
+  }
+}
+
+class "PostgreSQL" as BD <<database>>
+
+Usuario --> Home : solicita tipo de reporte
+Home ..> ReporteService : selecciona reporte
+ReporteService ..> ReporteDAO : delega consulta
+ReporteDAO ..> Conexion : obtiene conexion JDBC
+Conexion ..> BD : JDBC
+ReporteDAO ..> BD : consulta y agrega datos
+Home ..> Usuario : presenta tabla del reporte
+
+note right of ReporteService
+  General, parrilla, programas,
+  pautas y cumplimiento
+end note
+
+@enduml

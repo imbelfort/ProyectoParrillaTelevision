@@ -1,0 +1,73 @@
+@startuml
+title CU3 - Gestion de la Parrilla de Programacion
+
+actor "Programador / operador" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "ParrillaService" as ParrillaService
+participant "ItemParrillaService" as ItemService
+participant "ParrillaDAO" as ParrillaDAO
+participant "ItemParrillaDAO" as ItemDAO
+participant "AuditoriaSistemaService" as Auditoria
+participant "PostgreSQL" as BD
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando parrilla o item_parrilla
+Entrada -> Home : Entrega comando
+Home -> Home : Interpreta accion y parametros
+
+alt Gestion de parrilla
+    Home -> ParrillaService : Ejecuta accion
+    alt Crear parrilla
+        ParrillaService -> ParrillaService : Valida fecha y datos
+        ParrillaService -> ParrillaDAO : create(parrilla)
+        ParrillaDAO -> BD : INSERT parrilla\nestado inicial BORRADOR
+        BD --> ParrillaDAO : Resultado
+        ParrillaDAO --> ParrillaService : Confirmacion
+        Home -> Auditoria : Registra INSERT
+        Auditoria -> BD : INSERT auditoria
+        BD --> Auditoria : Resultado
+    else Consultar, listar, cambiar estado o eliminar
+        ParrillaService -> ParrillaService : Valida parametros si aplica
+        ParrillaService -> ParrillaDAO : SELECT, UPDATE estado o DELETE
+        ParrillaDAO -> BD : Consulta o modifica parrilla
+        BD --> ParrillaDAO : Datos o resultado
+        ParrillaDAO --> ParrillaService : Resultado de la operacion
+        opt Cambio de estado
+            Home -> Auditoria : Registra UPDATE_ESTADO
+            Auditoria -> BD : INSERT auditoria
+            BD --> Auditoria : Resultado
+        end
+    end
+    opt Crear, cambiar estado o eliminar
+        Home -> ParrillaService : listarParrillas()
+        ParrillaService -> ParrillaDAO : listAll()
+        ParrillaDAO -> BD : SELECT parrillas
+        BD --> ParrillaDAO : Lista actualizada
+        ParrillaDAO --> ParrillaService : Parrillas
+        ParrillaService --> Home : Resultado y lista
+    end
+    ParrillaService --> Home : Datos o resultado
+else Gestion de bloques de programacion
+    Home -> ItemService : Ejecuta accion del bloque
+    alt Agregar o modificar bloque
+        ItemService -> ItemService : Valida IDs y horarios\nverifica inicio anterior al fin
+        ItemService -> ItemDAO : create(item) o update(item)
+        ItemDAO -> BD : INSERT o UPDATE item_parrilla
+        BD --> ItemDAO : Resultado
+        ItemDAO --> ItemService : Confirmacion
+    else Listar, consultar, eliminar, hoy o al aire
+        ItemService -> ItemDAO : Ejecuta consulta o elimina bloque
+        ItemDAO -> BD : SELECT o DELETE item_parrilla
+        BD --> ItemDAO : Datos o resultado
+        ItemDAO --> ItemService : Resultado de la operacion
+    end
+    ItemService --> Home : Datos o resultado
+end
+
+Home -> Home : Genera tabla, confirmacion o error
+Home -> Correo : Envia respuesta si el remitente es correo
+Correo --> Usuario : Respuesta por correo
+Home --> Entrada : Muestra respuesta en consola
+
+@enduml

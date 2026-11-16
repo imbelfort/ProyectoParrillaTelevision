@@ -1,0 +1,72 @@
+@startuml
+title CU4 - Gestion de Materiales de Video
+
+actor "Encargado de contenidos" as Usuario
+participant "Consola o correo" as Entrada
+participant "Home / Interpreter" as Home
+participant "MaterialVideoService" as Servicio
+participant "MaterialVideoDAO" as DAO
+participant "AuditoriaSistemaService" as Auditoria
+participant "PostgreSQL" as BD
+participant "SendEmail" as Correo
+
+Usuario -> Entrada : Envia comando material
+Entrada -> Home : Entrega comando
+Home -> Home : Interpreta accion y parametros
+Home -> Servicio : Ejecuta accion CU4
+
+alt Agregar material
+    Servicio -> Servicio : Valida datos del material
+    Servicio -> DAO : create(material)
+    DAO -> BD : INSERT material_video\nincluye ruta y estado LISTO
+    BD --> DAO : Resultado
+    DAO --> Servicio : Confirmacion
+    Home -> Auditoria : Registra INSERT
+    Auditoria -> BD : INSERT auditoria
+    BD --> Auditoria : Resultado
+    Home -> Servicio : listarMateriales()
+    Servicio -> DAO : listAll()
+    DAO -> BD : SELECT materiales
+    BD --> DAO : Lista actualizada
+    DAO --> Servicio : Materiales
+    Servicio --> Home : Lista actualizada
+else Actualizar estado tecnico
+    Servicio -> Servicio : Valida ID y estado
+    Servicio -> DAO : updateEstado(id, estado)
+    DAO -> BD : UPDATE material_video
+    BD --> DAO : Resultado
+    DAO --> Servicio : Confirmacion
+    Home -> Auditoria : Registra UPDATE_ESTADO
+    Auditoria -> BD : INSERT auditoria
+    BD --> Auditoria : Resultado
+    Home -> Servicio : listarMateriales()
+    Servicio -> DAO : listAll()
+    DAO -> BD : SELECT materiales
+    BD --> DAO : Lista actualizada
+    DAO --> Servicio : Materiales
+    Servicio --> Home : Lista actualizada
+else Listar, consultar o filtrar por programa
+    Servicio -> DAO : Consulta materiales
+    DAO -> BD : SELECT material_video\ncon programa y responsable
+    BD --> DAO : Registros
+    DAO --> Servicio : Lista o detalle
+    Servicio --> Home : Resultado de consulta
+else Eliminar material
+    Servicio -> DAO : delete(id)
+    DAO -> BD : DELETE material_video
+    BD --> DAO : Resultado
+    DAO --> Servicio : Confirmacion
+    Home -> Servicio : listarMateriales()
+    Servicio -> DAO : listAll()
+    DAO -> BD : SELECT materiales
+    BD --> DAO : Lista actualizada
+    DAO --> Servicio : Materiales
+    Servicio --> Home : Lista actualizada
+end
+
+Home -> Home : Genera tabla, confirmacion o error
+Home -> Correo : Envia respuesta si el remitente es correo
+Correo --> Usuario : Respuesta por correo
+Home --> Entrada : Muestra respuesta en consola
+
+@enduml
