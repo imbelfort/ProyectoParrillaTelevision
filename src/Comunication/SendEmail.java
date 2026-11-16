@@ -147,14 +147,17 @@ public class SendEmail {
                 }
 
                 // Sanitize subject: remove or replace any internal newlines to avoid header injection
+                // Subject con codificacion MIME RFC 2047 si contiene caracteres no ASCII (tildes, eñes)
                 String subject = "";
                 if (email.getSubject() != null) {
-                    // Use \R to replace any Unicode linebreak sequences with a single space
                     subject = email.getSubject().toString().replaceAll("\\R+", " ").trim();
+                    try {
+                        subject = MimeUtility.encodeText(subject, "UTF-8", "B");
+                    } catch (Exception ignored) {}
                 }
                 data.append("Subject: ").append(subject).append("\r\n");
 
-                // Cuerpo: normalizar saltos de lÃ­nea a CRLF y aplicar dot-stuffing solo al cuerpo
+                // Cuerpo: normalizar saltos de linea a CRLF y aplicar dot-stuffing solo al cuerpo
                 InlineEmailContent inlineContent = prepararContenidoInline(mensaje);
 
                 String cuerpoSeguridad = normalizeForSmtp(inlineContent.htmlSanitizado)
@@ -164,14 +167,15 @@ public class SendEmail {
                 if (inlineContent.hasImages()) {
                     data.append("Content-Type: multipart/related; boundary=related-boundary-1\r\n");
                 } else {
-                    data.append("Content-Type: text/html; charset=\"UTF-8\"\r\n");
+                    data.append("Content-Type: text/html; charset=UTF-8\r\n");
+                    data.append("Content-Transfer-Encoding: 8bit\r\n");
                 }
 
                 data.append("\r\n"); 
 
                 if (inlineContent.hasImages()) {
                     data.append("--related-boundary-1\r\n");
-                    data.append("Content-Type: text/html; charset=\"UTF-8\"\r\n");
+                    data.append("Content-Type: text/html; charset=UTF-8\r\n");
                     data.append("Content-Transfer-Encoding: 8bit\r\n\r\n");
                     data.append(cuerpoSeguridad);
                     data.append("\r\n");
@@ -192,9 +196,8 @@ public class SendEmail {
 
                 data.append(".\r\n");
 
-                String finalData = data.toString();
-
-                writer.writeBytes(finalData);
+                byte[] rawBytes = data.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                writer.write(rawBytes);
                 writer.flush();
                 String dataResponse = reader.readLine();
                 if (dataResponse != null) {
