@@ -473,6 +473,24 @@ public class InicializarDB {
                     "ON CONFLICT DO NOTHING"
             );
 
+            // 15. Sincronizacion de secuencias (sequences) para evitar conflicto de IDs al insertar registros nuevos
+            ejecutarSentencias(stmt,
+                    "SELECT setval('usuario_id_usuario_seq', (SELECT COALESCE(MAX(id_usuario), 1) FROM public.usuario))",
+                    "SELECT setval('roles_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.roles))",
+                    "SELECT setval('categoria_programa_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.categoria_programa))",
+                    "SELECT setval('programa_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.programa))",
+                    "SELECT setval('parrilla_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.parrilla))",
+                    "SELECT setval('item_parrilla_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.item_parrilla))",
+                    "SELECT setval('material_video_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.material_video))",
+                    "SELECT setval('validacion_emision_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.validacion_emision))",
+                    "SELECT setval('cliente_publicitario_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.cliente_publicitario))",
+                    "SELECT setval('spot_publicitario_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.spot_publicitario))",
+                    "SELECT setval('pauta_comercial_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.pauta_comercial))",
+                    "SELECT setval('emision_real_log_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.emision_real_log))",
+                    "SELECT setval('auditoria_sistema_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.auditoria_sistema))",
+                    "SELECT setval('reporte_id_seq', (SELECT COALESCE(MAX(id), 1) FROM public.reporte))"
+            );
+
             System.out.println("[OK] Datos iniciales de television insertados correctamente.");
 
         } catch (SQLException e) {
