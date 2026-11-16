@@ -69,3 +69,4 @@ C:\Users\MEGAVISION\Downloads\ProyectoMailGrupo02SC\ProyectoParrillaTelevision\P
 C:\Users\MEGAVISION\Downloads\ProyectoMailGrupo02SC\ProyectoParrillaTelevision\ProyectoParrillaTelevision\src\Utils\TokenCommand.java
 C:\Users\MEGAVISION\Downloads\ProyectoMailGrupo02SC\ProyectoParrillaTelevision\ProyectoParrillaTelevision\src\Utils\TSParams.java
 C:\Users\MEGAVISION\Downloads\ProyectoMailGrupo02SC\ProyectoParrillaTelevision\ProyectoParrillaTelevision\src\Utils\Utils.java
+C:\Users\MEGAVISION\Downloads\ProyectoMailGrupo02SC\ProyectoParrillaTelevision\ProyectoParrillaTelevision\src\Utils\Validator.java

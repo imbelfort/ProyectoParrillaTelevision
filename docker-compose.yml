@@ -48,6 +48,7 @@ services:
       ROUNDCUBEMAIL_SMTP_SERVER: mailserver
       ROUNDCUBEMAIL_SMTP_PORT: 25
       ROUNDCUBEMAIL_DEFAULT_PORT: 143
+      ROUNDCUBEMAIL_MAIL_DOMAIN: tecnoweb.org.bo
       ROUNDCUBEMAIL_SKIN: elastic
       ROUNDCUBEMAIL_PRODUCT_NAME: "Webmail Parrilla TV & Playout - Grupo 12 SC"
     depends_on:

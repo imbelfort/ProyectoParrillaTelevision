@@ -264,7 +264,8 @@ public class SendEmail {
         if (clean.startsWith("<") && clean.endsWith(">")) {
             clean = clean.substring(1, clean.length() - 1).trim();
         }
-        return clean.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+        // Acepta correos de internet estandar (con TLD) o correos locales/Docker de intranet (ej: admin@mailserver)
+        return clean.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+$");
     }
 
     ///////////////////////////////////////////////////////////////

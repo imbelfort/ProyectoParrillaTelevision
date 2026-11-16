@@ -364,7 +364,7 @@ public class Extractor {
         if (lt >= 0 && gt > lt) {
             return value.substring(lt + 1, gt).trim();
         }
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}").matcher(value);
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+").matcher(value);
         if (m.find()) {
             return m.group().trim();
         }
