@@ -1,35 +1,37 @@
 package Database;
 
 public class ConfigEmailServer {
+    public static final String HOST = "mail.tecnoweb.org.bo";
+    public static final String PORT_SMTP = "25";
+    public static final String PORT_POP = "110";
+    public static final String PORT_IMAP = "143";
+    public static final String USER = "grupo12sc";
+    public static final String PASSWORD = "grup012grup012*";
+    public static final String MAIL = "grupo12sc@tecnoweb.org.bo";
+    public static final String MAIL_PASSWORD = "grup012grup012*";
+    public static final String PROTOCOL = "smtp";
+
     public static String getHost() {
-        String envHost = System.getenv("MAIL_HOST");
-        if (envHost != null && !envHost.trim().isEmpty()) {
-            return envHost.trim();
-        }
-        return "mail.tecnoweb.org.bo";
+        return HOST;
     }
 
     public static String getPortSmtp() {
-        String envPort = System.getenv("MAIL_SMTP_PORT");
-        if (envPort != null && !envPort.trim().isEmpty()) {
-            return envPort.trim();
-        }
-        return "25";
+        return PORT_SMTP;
     }
 
     public static String getPortPop() {
-        String envPort = System.getenv("MAIL_POP_PORT");
-        if (envPort != null && !envPort.trim().isEmpty()) {
-            return envPort.trim();
-        }
-        return "110";
+        return PORT_POP;
     }
 
-    public static String PORT_SMTP = getPortSmtp();
-    public static String PROTOCOL = "smtp";
-    public static String HOST = getHost();
-    public static String USER = "grupo12sc";
-    public static String PASSWORD = "grup012grup012*";
-    public static String MAIL = "grupo12sc@tecnoweb.org.bo";
-    public static String MAIL_PASSWORD = "grup012grup012*";
+    public static String getUser() {
+        return USER;
+    }
+
+    public static String getPassword() {
+        return PASSWORD;
+    }
+
+    public static String getMail() {
+        return MAIL;
+    }
 }

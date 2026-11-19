@@ -34,13 +34,25 @@ public class MailVerificationThread implements Runnable {
         }
     }
 
-    private final static int PORT_POP = getPortPopInt();
-    private final static int PORT_IMAP = 143;
-    private final static int PORT_SMTP = getPortSmtpInt();
+    private int getPortPopDynamic() {
+        return getPortPopInt();
+    }
 
-    private final static String HOST = Database.ConfigEmailServer.getHost();
-    private final static String USER = Database.ConfigEmailServer.USER;
-    private final static String PASSWORD = Database.ConfigEmailServer.PASSWORD;
+    private int getPortSmtpDynamic() {
+        return getPortSmtpInt();
+    }
+
+    private String getHostDynamic() {
+        return Database.ConfigEmailServer.getHost();
+    }
+
+    private String getUserDynamic() {
+        return Database.ConfigEmailServer.getUser();
+    }
+
+    private String getPasswordDynamic() {
+        return Database.ConfigEmailServer.getPassword();
+    }
 
     private final static int CONNECT_TIMEOUT_MS = 5000;
     private final static int LOOP_DELAY_MS = 5000;
@@ -83,21 +95,27 @@ public class MailVerificationThread implements Runnable {
     public void run() {
         while (true) {
             try {
-                boolean smtpAvailable = isPortAvailable(HOST, PORT_SMTP, CONNECT_TIMEOUT_MS);
-                notifyStatusIfChanged("SMTP", PORT_SMTP, smtpAvailable, 2);
+                String host = getHostDynamic();
+                int portPop = getPortPopDynamic();
+                int portSmtp = getPortSmtpDynamic();
+                String user = getUserDynamic();
+                String password = getPasswordDynamic();
+
+                boolean smtpAvailable = isPortAvailable(host, portSmtp, CONNECT_TIMEOUT_MS);
+                notifyStatusIfChanged("SMTP", portSmtp, smtpAvailable, 2);
 
                 List<Email> emails = null;
 
-                socket = openSocket(HOST, PORT_POP, CONNECT_TIMEOUT_MS);
+                socket = openSocket(host, portPop, CONNECT_TIMEOUT_MS);
                 input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 output = new DataOutputStream(socket.getOutputStream());
 
                 debug("Conexion POP3 establecida");
-                logProtocol("POP3", "S", "conexion establecida con " + HOST + ":" + PORT_POP);
+                logProtocol("POP3", "S", "conexion establecida con " + host + ":" + portPop);
 
-                notifyStatusIfChanged("POP3", PORT_POP, true, 0);
+                notifyStatusIfChanged("POP3", portPop, true, 0);
 
-                authUser(USER, PASSWORD);
+                authUser(user, password);
 
                 int count = getEmailCount();
                 if (count > 0) {
@@ -123,14 +141,14 @@ public class MailVerificationThread implements Runnable {
                 Thread.sleep(LOOP_DELAY_MS);
 
             } catch (IOException ex) {
-                notifyStatusIfChanged("POP3", PORT_POP, false, 0);
+                notifyStatusIfChanged("POP3", getPortPopDynamic(), false, 0);
                 Logger.getLogger(MailVerificationThread.class.getName()).log(Level.SEVERE, null, ex);
                 logProtocol("POP3", "!", "error de comunicacion: " + ex.getMessage());
                 cerrarConexionPop3();
                 safeSleep(LOOP_DELAY_MS);
 
             } catch (LinkageError error) {
-                notifyStatusIfChanged("POP3", PORT_POP, false, 0);
+                notifyStatusIfChanged("POP3", getPortPopDynamic(), false, 0);
                 logProtocol("POP3", "!", "dependencia de ejecucion faltante: " + error.getMessage());
                 cerrarConexionPop3();
                 safeSleep(LOOP_DELAY_MS);
@@ -142,7 +160,7 @@ public class MailVerificationThread implements Runnable {
                 break;
 
             } catch (Exception ex) {
-                notifyStatusIfChanged("POP3", PORT_POP, false, 0);
+                notifyStatusIfChanged("POP3", getPortPopDynamic(), false, 0);
                 logProtocol("POP3", "!", "error procesando correo: " + ex.getMessage());
                 cerrarConexionPop3();
                 safeSleep(LOOP_DELAY_MS);

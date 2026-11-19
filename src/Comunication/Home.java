@@ -49,7 +49,11 @@ public class Home {
         final ReporteService reporteService = new ReporteService();
 
         String subjectText = email.getSubject() != null ? email.getSubject().trim() : "";
-        System.out.println("[COMANDO RECIBIDO] De: " + email.getFrom() + " | Subject: " + subjectText);
+        System.out.println("\n" + repetir('=', 95));
+        System.out.println(">>> [CORREO RECIBIDO]");
+        System.out.println("    Remitente (From) : " + email.getFrom());
+        System.out.println("    Asunto (Subject) : " + subjectText);
+        System.out.println(repetir('=', 95));
 
         // Comando HELP global
         if ("help".equalsIgnoreCase(subjectText) || "ayuda".equalsIgnoreCase(subjectText)) {
@@ -980,25 +984,25 @@ public class Home {
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
             respuesta.sendmail(email.getFrom(), titulo, html);
         }
-        System.out.println("[RESPUESTA TABLA] '" + titulo + "' (" + (filas != null ? filas.size() : 0) + " registros) -> " + email.getFrom());
+        System.out.println("<<< [RESPUESTA SERVIDOR - TABLA] '" + titulo + "' (" + (filas != null ? filas.size() : 0) + " registros) -> Destino: " + email.getFrom());
     }
 
     private static void enviarExito(Email email, SendEmail respuesta, String titulo, String mensaje) {
         String html = HtmlBuilder.generarMensajeExito(titulo, mensaje);
         mostraRespuesta(html);
-        System.out.println("\n>>> [EXITO] " + titulo + " | " + mensaje);
+        System.out.println("\n<<< [RESPUESTA SERVIDOR - EXITO] " + titulo + " | " + mensaje);
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
             respuesta.sendmail(email.getFrom(), titulo, html);
         }
-        System.out.println("[RESPUESTA EXITO] '" + titulo + "' -> " + email.getFrom() + " | " + mensaje);
+        System.out.println("<<< [RESPUESTA ENVIADA] '" + titulo + "' -> Destino: " + email.getFrom() + " | " + mensaje);
     }
 
     public static void enviarErrorDetallado(Email email, SendEmail respuesta, String codigoError, String titulo, String queFallo, String sugerencia) {
         String comandoRecibido = email != null && email.getSubject() != null ? email.getSubject() : "";
         String html = HtmlBuilder.generarMensajeErrorDetallado(codigoError, titulo, comandoRecibido, queFallo, sugerencia);
         mostraRespuesta(html);
-        System.err.println("\n>>> [ERROR " + codigoError + "] " + titulo);
-        System.err.println("    Detalle: " + queFallo);
+        System.err.println("\n<<< [RESPUESTA SERVIDOR - ERROR " + codigoError + "] " + titulo);
+        System.err.println("    Fallo     : " + queFallo);
         if (sugerencia != null && !sugerencia.isEmpty()) {
             System.err.println("    Sugerencia: " + sugerencia);
         }
@@ -1006,7 +1010,7 @@ public class Home {
             String subject = "[" + codigoError + "] ERROR: " + titulo;
             respuesta.sendmail(email.getFrom(), subject, html);
         }
-        System.err.println("[RESPUESTA ERROR " + codigoError + "] '" + titulo + "' -> " + email.getFrom() + " | " + queFallo);
+        System.err.println("<<< [RESPUESTA ERROR ENVIADA " + codigoError + "] '" + titulo + "' -> Destino: " + email.getFrom() + " | " + queFallo);
     }
 
     private static void enviarErrorDetallado(Email email, SendEmail respuesta, String titulo, String queFallo, String sugerencia) {
@@ -1016,11 +1020,12 @@ public class Home {
     private static void mostrarYEnviarHELP(Email email, SendEmail respuesta, String menuAyuda) {
         String html = HtmlBuilder.generarMenuAyudaHtml(menuAyuda);
         mostraRespuesta(html);
-        System.out.println("\n" + menuAyuda + "\n");
+        System.out.println("\n<<< [RESPUESTA SERVIDOR - MENU DE AYUDA]");
+        System.out.println(menuAyuda);
         if (email.getFrom() != null && !email.getFrom().trim().isEmpty()) {
             respuesta.sendmail(email.getFrom(), "AYUDA - Sistema de Parrilla de Televisión", html);
         }
-        System.out.println("[RESPUESTA HELP] Enviada a -> " + email.getFrom());
+        System.out.println("<<< [RESPUESTA HELP ENVIADA] -> Destino: " + email.getFrom());
     }
 
     public static void mostraRespuesta(String html) {

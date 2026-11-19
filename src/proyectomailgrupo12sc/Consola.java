@@ -34,7 +34,8 @@ public class Consola {
         System.out.println("[INFO] Iniciando demonio de monitoreo de correos POP3...");
         try {
             Home.iniciar();
-            System.out.println("[OK] Demonio de correo ACTIVO (cuenta: grupo12sc@tecnoweb.org.bo)");
+            System.out.println("[OK] Demonio de correo ACTIVO (cuenta: " + Database.ConfigEmailServer.getMail() + ")");
+            System.out.println("[OK] Servidor: " + Database.ConfigEmailServer.getHost() + " (POP3:" + Database.ConfigEmailServer.getPortPop() + " / SMTP:" + Database.ConfigEmailServer.getPortSmtp() + ")");
             System.out.println("[OK] Revisando servidor cada 5 segundos.");
         } catch (Exception e) {
             System.err.println("[ERROR] Error al iniciar el hilo de correo: " + e.getMessage());

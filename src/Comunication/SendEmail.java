@@ -50,9 +50,17 @@ public class SendEmail {
         }
     }
 
-    private final static int PORT_SMTP = getPortSmtpInt();
-    private final static String SERVER = ConfigEmailServer.getHost();
-    private final static String user_emisor = ConfigEmailServer.MAIL;
+    public static int getPortSmtp() {
+        return getPortSmtpInt();
+    }
+
+    public static String getServer() {
+        return ConfigEmailServer.getHost();
+    }
+
+    public static String getUserEmisor() {
+        return ConfigEmailServer.getMail();
+    }
     private static String user_receptor;
     private static Socket socket;
     private static BufferedReader entrada;
@@ -79,8 +87,12 @@ public class SendEmail {
         System.out.println("Enviando correo de respuesta a: " + email.getFrom());
 
         try {
+            String server = getServer();
+            int portSmtp = getPortSmtp();
+            String emisor = getUserEmisor();
+
             // Estableciendo Conexion Socket
-            Socket socket = new Socket(SERVER, PORT_SMTP);
+            Socket socket = new Socket(server, portSmtp);
             socket.setSoTimeout(15000);
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new DataOutputStream(socket.getOutputStream());
@@ -89,11 +101,11 @@ public class SendEmail {
                 logSmtp("S", reader.readLine());
 
                 // Saludar al servidor
-                command = "HELO " + SERVER + "\r\n";
+                command = "HELO " + server + "\r\n";
                 sendSmtpCommand(writer, command);
                 logSmtp("S", reader.readLine());
 
-                command = "MAIL FROM:<" + user_emisor + ">\r\n";
+                command = "MAIL FROM:<" + emisor + ">\r\n";
                 sendSmtpCommand(writer, command);
                 logSmtp("S", reader.readLine());
 
@@ -131,7 +143,7 @@ public class SendEmail {
 
                 // Construir cabeceras minimas validas (From, To, Subject, MIME)
                 StringBuilder data = new StringBuilder();
-                data.append("From: <").append(user_emisor).append(">\r\n");
+                data.append("From: <").append(emisor).append(">\r\n");
 
                 List<String> toList = new ArrayList<>();
                 if (esEmailValido(email.getFrom())) {
@@ -315,12 +327,12 @@ public class SendEmail {
             // Fallback a JavaMail si fuera necesario
             try {
                 Properties p = new Properties();
-                p.put("mail.smtp.host", SERVER);
-                p.put("mail.smtp.port", String.valueOf(PORT_SMTP));
+                p.put("mail.smtp.host", getServer());
+                p.put("mail.smtp.port", String.valueOf(getPortSmtp()));
                 p.put("mail.smtp.auth", "false");
                 Session s = Session.getInstance(p);
                 MimeMessage mensaje = new MimeMessage(s);
-                mensaje.setFrom(new InternetAddress(user_emisor));
+                mensaje.setFrom(new InternetAddress(getUserEmisor()));
                 mensaje.setSubject(subject != null ? subject : "Respuesta Sistema TV", "UTF-8");
                 mensaje.setContent(html != null ? html : "", "text/html; charset=UTF-8");
                 mensaje.addRecipient(Message.RecipientType.TO, new InternetAddress(receptor.trim()));
